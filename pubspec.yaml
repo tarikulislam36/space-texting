@@ -1,0 +1,33 @@
+name: space_texting
+version: 1.0.0+1
+publish_to: none
+description: A new Flutter project.
+environment: 
+  sdk: '>=3.3.4 <4.0.0'
+
+dependencies: 
+  cupertino_icons: ^1.0.6
+  get: 4.6.6
+  flutter: 
+    sdk: flutter
+  glossy: ^0.0.4
+  flutter_svg: ^2.0.10+1
+  pinput: ^5.0.0
+  image_picker: ^1.1.2
+  permission_handler: ^11.3.1
+
+dev_dependencies: 
+  flutter_lints: ^3.0.0
+  flutter_test: 
+    sdk: flutter
+
+flutter: 
+  uses-material-design: true
+  assets:
+    - assets/
+
+
+flutter_assets:
+  assets_path: assets/
+  output_path: lib/constants/
+  filename: assets.dart
