@@ -28,6 +28,12 @@ import '../modules/signupSuccess/bindings/signup_success_binding.dart';
 import '../modules/signupSuccess/views/signup_success_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
+import '../modules/videoCall/bindings/video_call_binding.dart';
+import '../modules/videoCall/views/video_call_view.dart';
+import '../modules/viewProfile/bindings/view_profile_binding.dart';
+import '../modules/viewProfile/views/view_profile_view.dart';
+import '../modules/voiceCall/bindings/voice_call_binding.dart';
+import '../modules/voiceCall/views/voice_call_view.dart';
 import '../modules/welcome/bindings/welcome_binding.dart';
 import '../modules/welcome/views/welcome_view.dart';
 
@@ -108,6 +114,21 @@ class AppPages {
       name: _Paths.PROFILE_SCREEN,
       page: () => const ProfileScreenView(),
       binding: ProfileScreenBinding(),
+    ),
+    GetPage(
+      name: _Paths.VIDEO_CALL,
+      page: () => const VideoCallView(),
+      binding: VideoCallBinding(),
+    ),
+    GetPage(
+      name: _Paths.VOICE_CALL,
+      page: () => const VoiceCallView(),
+      binding: VoiceCallBinding(),
+    ),
+    GetPage(
+      name: _Paths.VIEW_PROFILE,
+      page: () => const ViewProfileView(),
+      binding: ViewProfileBinding(),
     ),
   ];
 }

@@ -14,6 +14,22 @@ class Assets {
   /// assets/background.png
   static const String assetsBackground = "assets/background.png";
 
+  /// Assets for assetsBg1
+  /// assets/bg1.jpg
+  static const String assetsBg1 = "assets/bg1.jpg";
+
+  /// Assets for assetsBg2
+  /// assets/bg2.jpg
+  static const String assetsBg2 = "assets/bg2.jpg";
+
+  /// Assets for assetsBg3
+  /// assets/bg3.jpg
+  static const String assetsBg3 = "assets/bg3.jpg";
+
+  /// Assets for assetsBg4
+  /// assets/bg4.jpg
+  static const String assetsBg4 = "assets/bg4.jpg";
+
   /// Assets for assetsGetStarted
   /// assets/get_started.png
   static const String assetsGetStarted = "assets/get_started.png";
