@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "918605907062",
+    "project_id": "space-text-1a5c7",
+    "storage_bucket": "space-text-1a5c7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:918605907062:android:6d0ea8d80cd8416a080b57",
+        "android_client_info": {
+          "package_name": "com.joy.space_texting"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2zXbAiTxB56swdNKpjZNYswFiVHtG4vI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

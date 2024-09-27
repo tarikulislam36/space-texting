@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:space_texting/app/modules/chat/views/bubble_chat.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
@@ -176,52 +175,49 @@ class _ChatViewState extends State<ChatView> {
                             onTap: () {
                               Get.toNamed(Routes.VIDEO_CALL);
                             },
-                            child: Icon(Icons.videocam, color: Colors.white)),
+                            child: const Icon(Icons.videocam,
+                                color: Colors.white)),
                         const SizedBox(width: 20),
-                        Positioned(
-                          top: 50, // Adjust top position as needed
-                          right: 20, // Adjust right position as needed
-                          child: PopupMenuButton<int>(
-                            icon: const Icon(Icons.more_vert,
-                                color: Colors.white), // More options icon
-                            color: Color.fromARGB(255, 44, 40, 40).withOpacity(
-                                0.8), // Set the background color with opacity
-                            itemBuilder: (context) => [
-                              // Popup menu items
-                              PopupMenuItem(
-                                value: 1,
-                                child: Row(
-                                  children: const [
-                                    Icon(Icons.block, color: Colors.white),
-                                    SizedBox(width: 10),
-                                    Text('Block User',
-                                        style: TextStyle(color: Colors.white)),
-                                  ],
-                                ),
+                        PopupMenuButton<int>(
+                          icon: const Icon(Icons.more_vert,
+                              color: Colors.white), // More options icon
+                          color: const Color.fromARGB(255, 44, 40, 40)
+                              .withOpacity(
+                                  0.8), // Set the background color with opacity
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 1,
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.block, color: Colors.white),
+                                  SizedBox(width: 10),
+                                  Text('Block User',
+                                      style: TextStyle(color: Colors.white)),
+                                ],
                               ),
-                              PopupMenuItem(
-                                value: 2,
-                                child: Row(
-                                  children: const [
-                                    Icon(Icons.chat_bubble_outline,
-                                        color: Colors.white),
-                                    SizedBox(width: 10),
-                                    Text('Clear Chat',
-                                        style: TextStyle(color: Colors.white)),
-                                  ],
-                                ),
+                            ),
+                            PopupMenuItem(
+                              value: 2,
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.chat_bubble_outline,
+                                      color: Colors.white),
+                                  SizedBox(width: 10),
+                                  Text('Clear Chat',
+                                      style: TextStyle(color: Colors.white)),
+                                ],
                               ),
-                            ],
-                            onSelected: (value) {
-                              if (value == 1) {
-                                // Handle Block User action
-                                print('Block User');
-                              } else if (value == 2) {
-                                // Handle Clear Chat action
-                                print('Clear Chat');
-                              }
-                            },
-                          ),
+                            ),
+                          ],
+                          onSelected: (value) {
+                            if (value == 1) {
+                              // Handle Block User action
+                              print('Block User');
+                            } else if (value == 2) {
+                              // Handle Clear Chat action
+                              print('Clear Chat');
+                            }
+                          },
                         ),
                       ],
                     ),

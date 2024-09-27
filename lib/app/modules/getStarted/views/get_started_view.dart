@@ -59,7 +59,7 @@ class GetStartedView extends GetView<GetStartedController> {
                       width: 70.w,
                       buttonText: "Continue",
                       onPressed: () {
-                        Get.toNamed(Routes.LOGIN_SIGNUP);
+                        Get.toNamed(Routes.SIGNUP);
                       },
                     ),
                     40.kheightBox,

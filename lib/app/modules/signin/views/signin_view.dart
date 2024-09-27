@@ -10,7 +10,7 @@ import 'package:space_texting/constants/assets.dart';
 import '../controllers/signin_controller.dart';
 
 class SigninView extends GetView<SigninController> {
-  const SigninView({Key? key}) : super(key: key);
+  const SigninView({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,15 +37,18 @@ class SigninView extends GetView<SigninController> {
                       icon: SvgPicture.asset(Assets.assetsBackIcon))
                 ],
               ),
-              Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Image.asset(
-                    Assets.assetsLogin,
-                    width: 65.w,
-                  ),
-                ],
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.only(right: 27),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Image.asset(
+                      Assets.assetsLogin,
+                      width: 65.w,
+                    ),
+                  ],
+                ),
               ),
               GlossyContainer(
                 height: 60.h,
@@ -74,55 +77,22 @@ class SigninView extends GetView<SigninController> {
                         ),
                         30.kheightBox,
                         TextField(
+                          keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white.withOpacity(0.1),
-                            hintText: 'Username',
-                            hintStyle: TextStyle(color: Colors.white70),
+                            hintText: 'Phone number',
+                            hintStyle: const TextStyle(color: Colors.white70),
                             prefixIcon:
-                                Icon(Icons.person, color: Colors.white70),
+                                const Icon(Icons.phone, color: Colors.white70),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
                               borderSide: BorderSide.none,
                             ),
                           ),
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
-                        SizedBox(height: 20.0),
-                        // Password Field
-                        TextField(
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.1),
-                            hintText: 'Password',
-                            hintStyle: TextStyle(color: Colors.white70),
-                            prefixIcon:
-                                Icon(Icons.vpn_key, color: Colors.white70),
-                            suffixIcon: Icon(Icons.visibility_off,
-                                color: Colors.white70),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        SizedBox(height: 20.0),
-                        // Forgot Password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              // Implement your forgot password functionality here
-                            },
-                            child: Text(
-                              'Forgot Password?',
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                          ),
-                        ),
-                        Spacer(),
+                        const Spacer(),
                         CustomElevatedButton(
                           height: 50,
                           width: 100.w,
