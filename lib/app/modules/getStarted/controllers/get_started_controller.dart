@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class GetStartedController extends GetxController {
-  //TODO: Implement GetStartedController
-
   final count = 0.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -20,4 +20,9 @@ class GetStartedController extends GetxController {
   }
 
   void increment() => count.value++;
+
+  Future<bool> requestNotificationPermission() async {
+    final status = await Permission.notification.request();
+    return status.isGranted;
+  }
 }

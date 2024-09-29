@@ -155,13 +155,15 @@ class SignupSuccessView extends GetView<SignupSuccessController> {
                         buttonText: "Submit",
                         onPressed: () async {
                           // Show loading dialog
+                          String phoneNo = Get.arguments["phoneNo"];
                           DialogHelper.showLoading();
+                          print(phoneNo);
 
                           // Get the OTP from the controller
                           String otp = controller.otpInput.value;
 
                           // Verify the OTP
-                          await controller.verifyOtp(otp);
+                          await controller.verifyOtp(otp, phoneNo);
 
                           // Hide loading dialog after verification
                           DialogHelper.hideDialog();

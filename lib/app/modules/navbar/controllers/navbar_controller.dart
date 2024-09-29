@@ -1,6 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
 class NavbarController extends GetxController {
+  @override
+  void onInit() async {
+    super.onInit();
+    print(
+        "Auth token : ${await FirebaseAuth.instance.currentUser!.getIdToken()}");
+  }
+
   // To track the selected tab index
   var selectedIndex = 1.obs;
 

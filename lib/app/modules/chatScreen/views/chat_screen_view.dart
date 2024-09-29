@@ -40,7 +40,7 @@ class ChatCard extends StatelessWidget {
             radius: 25,
           ),
           if (isOnline)
-            Positioned(
+            const Positioned(
               bottom: 0,
               right: 0,
               child: CircleAvatar(

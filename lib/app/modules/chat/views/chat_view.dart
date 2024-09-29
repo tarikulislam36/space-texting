@@ -167,13 +167,21 @@ class _ChatViewState extends State<ChatView> {
                         const Spacer(),
                         InkWell(
                             onTap: () {
-                              Get.toNamed(Routes.VOICE_CALL);
+                              Get.toNamed(Routes.VIDEO_CALL, arguments: {
+                                "callId": "joysarkarcalltest",
+                                "receiverId": "joysarkar",
+                                'isCaller': false,
+                              });
                             },
                             child: const Icon(Icons.call, color: Colors.white)),
                         const SizedBox(width: 20),
                         InkWell(
                             onTap: () {
-                              Get.toNamed(Routes.VIDEO_CALL);
+                              Get.toNamed(Routes.VIDEO_CALL, arguments: {
+                                "callId": "joysarkarcalltest",
+                                "receiverId": "joysarkar",
+                                'isCaller': true,
+                              });
                             },
                             child: const Icon(Icons.videocam,
                                 color: Colors.white)),

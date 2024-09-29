@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:glossy/glossy.dart';
 import 'package:space_texting/app/components/custom_button.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/constants/assets.dart';
-
 import '../controllers/get_started_controller.dart';
 
 class GetStartedView extends GetView<GetStartedController> {
   const GetStartedView({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,10 +18,7 @@ class GetStartedView extends GetView<GetStartedController> {
         width: 100.w,
         decoration: const BoxDecoration(
             image: DecorationImage(
-                image: AssetImage(
-                  Assets.assetsBackground,
-                ),
-                fit: BoxFit.cover)),
+                image: AssetImage(Assets.assetsBackground), fit: BoxFit.cover)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -58,8 +54,19 @@ class GetStartedView extends GetView<GetStartedController> {
                       height: 50,
                       width: 70.w,
                       buttonText: "Continue",
-                      onPressed: () {
-                        Get.toNamed(Routes.SIGNUP);
+                      onPressed: () async {
+                        bool isGranted =
+                            await controller.requestNotificationPermission();
+                        if (isGranted) {
+                          Get.toNamed(Routes.SIGNUP);
+                        } else {
+                          // Show a message to the user
+                          Get.snackbar(
+                            "Permission Denied",
+                            "Notifications permission is required to continue.",
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        }
                       },
                     ),
                     40.kheightBox,
