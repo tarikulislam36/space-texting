@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:giphy_get/giphy_get.dart';
+import 'package:space_texting/app/components/custom_button.dart';
 import 'package:space_texting/app/modules/chat/views/bubble_chat.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
+import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/constants/assets.dart';
 
 class ChatView extends StatefulWidget {
@@ -290,7 +293,7 @@ class _ChatViewState extends State<ChatView> {
           end: Alignment.bottomRight,
         ),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Padding(
             padding: EdgeInsets.only(top: 5),
@@ -308,7 +311,24 @@ class _ChatViewState extends State<ChatView> {
             ),
           ),
           SizedBox(width: 16),
-          Icon(Icons.send, color: Colors.white),
+          InkWell(
+              onTap: () async {
+                GiphyGif? gif = await GiphyGet.getGif(
+                  context: context, //Required
+                  apiKey: "s9ZjuJ6GRnhhi6OlY96DbOAeSFTWU7Q9", //Required.
+                  lang: GiphyLanguage.english, //Optional - Language for query.
+                  randomID:
+                      "abcd", // Optional - An ID/proxy for a specific user.
+                  tabColor: Colors.teal,
+                  // Optional- default accent color.
+                  debounceTimeInMilliseconds:
+                      350, // Optional- time to pause between search keystrokes
+                );
+              },
+              child: Icon(Icons.emoji_emotions, color: Colors.white)),
+          20.kwidthBox,
+          InkWell(
+              onTap: () async {}, child: Icon(Icons.send, color: Colors.white)),
         ],
       ),
     );

@@ -18,7 +18,7 @@ void main() async {
       debugShowCheckedModeBanner: false,
       title: "Application",
       initialRoute: FirebaseAuth.instance.currentUser != null
-          ? Routes.SPLASH
+          ? Routes.NAVBAR
           : AppPages.INITIAL,
       getPages: AppPages.routes,
     ),
