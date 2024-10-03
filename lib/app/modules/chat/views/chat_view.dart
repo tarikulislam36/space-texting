@@ -81,7 +81,13 @@ class _ChatViewState extends State<ChatView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(
-        () => SizedBox(
+        () => Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(Assets.assetsBackground),
+              fit: BoxFit.cover,
+            ),
+          ),
           height: Get.height,
           width: Get.width,
           child: Column(

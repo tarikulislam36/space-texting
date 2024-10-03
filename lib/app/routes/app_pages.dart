@@ -20,6 +20,8 @@ import '../modules/onboarding/bindings/onboarding_binding.dart';
 import '../modules/onboarding/views/onboarding_view.dart';
 import '../modules/profileScreen/bindings/profile_screen_binding.dart';
 import '../modules/profileScreen/views/profile_screen_view.dart';
+import '../modules/selectChat/bindings/select_chat_binding.dart';
+import '../modules/selectChat/views/select_chat_view.dart';
 import '../modules/signin/bindings/signin_binding.dart';
 import '../modules/signin/views/signin_view.dart';
 import '../modules/signup/bindings/signup_binding.dart';
@@ -129,6 +131,11 @@ class AppPages {
       name: _Paths.VIEW_PROFILE,
       page: () => const ViewProfileView(),
       binding: ViewProfileBinding(),
+    ),
+    GetPage(
+      name: _Paths.SELECT_CHAT,
+      page: () => const SelectChatView(),
+      binding: SelectChatBinding(),
     ),
   ];
 }

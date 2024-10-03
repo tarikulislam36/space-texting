@@ -111,6 +111,25 @@ class ChatScreenView extends GetView<ChatScreenController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Get.toNamed(Routes.SELECT_CHAT);
+        },
+        child: Container(
+          height: 60,
+          width: 60,
+          decoration: BoxDecoration(
+              color: Colors.deepPurple,
+              borderRadius: BorderRadius.circular(13)),
+          child: const Center(
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 34,
+            ),
+          ),
+        ),
+      ),
       body: Container(
         height: 100.h,
         width: 100.w,
@@ -122,6 +141,7 @@ class ChatScreenView extends GetView<ChatScreenController> {
           ),
         ),
         child: ListView(
+          physics: const BouncingScrollPhysics(),
           children: const [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
