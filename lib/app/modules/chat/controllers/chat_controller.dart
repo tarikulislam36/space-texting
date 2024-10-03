@@ -1,23 +1,58 @@
 import 'package:get/get.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:space_texting/app/services/socket_io_service.dart';
 
 class ChatController extends GetxController {
-  //TODO: Implement ChatController
+  late SocketService socketService;
+  var messages = <Map<String, dynamic>>[].obs; // Store messages
+  var isConnected = false.obs;
 
-  final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+    socketService = SocketService();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
+  // Connect to the socket
+  void connectSocket(String userId, String targetUserId) {
+    print("connection request send");
+    socketService.connectSocket(userId, targetUserId);
+
+    // Listen for socket connection events
+    socketService.socket?.on('connect', (_) {
+      isConnected.value = true;
+      print('Connected to the socket');
+    });
+
+    socketService.socket?.on('disconnect', (_) {
+      isConnected.value = false;
+      print('Disconnected from the socket');
+    });
+
+    // Listen for incoming messages
+    socketService.socket?.on('receive_message', (data) {
+      messages.add(data); // Add the received message to the list
+    });
+  }
+
+  // Send a message
+  void sendMessage(String senderId, String receiverId, String message) {
+    if (isConnected.value) {
+      socketService.sendMessage(senderId, receiverId, message);
+      messages.add({
+        'senderId': senderId,
+        'receiverId': receiverId,
+        'message': message,
+        'isSender': true,
+      });
+    } else {
+      print('Not connected to the socket');
+    }
   }
 
   @override
   void onClose() {
+    socketService.disconnectSocket();
     super.onClose();
   }
-
-  void increment() => count.value++;
 }

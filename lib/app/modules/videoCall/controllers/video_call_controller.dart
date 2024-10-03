@@ -72,8 +72,8 @@ class VideoCallController extends GetxController {
       await joinRoom(callId, remoteVideoRenderer);
     }
     // listenForHangUp();
-    // webrtc.Helper.setSpeakerphoneOn(
-    //     isSpeakerEnabled.value); // Listen for hang up changes
+    webrtc.Helper.setSpeakerphoneOn(
+        isSpeakerEnabled.value); // Listen for hang up changes
     isLoading.value = false;
   }
 
@@ -166,6 +166,16 @@ class VideoCallController extends GetxController {
     });
 
     return roomId;
+  }
+
+  void toggleCamera() {
+    // Get the first video track from the local stream
+    var videoTrack = localStream?.getVideoTracks().first;
+
+    if (videoTrack != null) {
+      // Toggle the enabled property of the video track
+      videoTrack.enabled = !videoTrack.enabled;
+    }
   }
 
   Future<void> joinRoom(String roomId, RTCVideoRenderer remoteVideo) async {

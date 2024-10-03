@@ -60,7 +60,6 @@ class SignupSuccessController extends GetxController {
       Get.snackbar('Success', 'OTP verified successfully!',
           backgroundColor: Colors.green, colorText: Colors.white);
 
-      // Send the phone number and notification token to the server
       final firebaseToken =
           await FirebaseAuth.instance.currentUser?.getIdToken() ?? '';
       final response =

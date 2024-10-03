@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:giphy_get/giphy_get.dart';
 import 'package:space_texting/app/components/custom_button.dart';
+import 'package:space_texting/app/modules/chat/controllers/chat_controller.dart';
 import 'package:space_texting/app/modules/chat/views/bubble_chat.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
@@ -13,12 +15,16 @@ class ChatView extends StatefulWidget {
   final String name;
   final String profileImage;
   final bool isOnline;
+  final String targetUserId;
+  final String userId;
 
   const ChatView({
     Key? key,
     required this.name,
     required this.profileImage,
     this.isOnline = false,
+    required this.targetUserId,
+    required this.userId,
   }) : super(key: key);
 
   @override
@@ -27,7 +33,9 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
   late PageController _pageController;
-  late Timer _timer;
+
+  ChatController chatController = Get.put(ChatController());
+  final _messageController = TextEditingController();
 
   final List<String> _imagePaths = [
     Assets.assetsBg1,
@@ -43,21 +51,8 @@ class _ChatViewState extends State<ChatView> {
     super.initState();
     _pageController = PageController();
     _gradientColors = _generateRandomGradientColors();
-    _startImageRotation();
-  }
 
-  void _startImageRotation() {
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_pageController.hasClients) {
-        final nextPage =
-            (_pageController.page! + 1).toInt() % _imagePaths.length;
-        _pageController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
+    chatController.connectSocket(widget.userId, widget.targetUserId);
   }
 
   List<Color> _generateRandomGradientColors() {
@@ -78,7 +73,6 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
-    _timer.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -86,23 +80,11 @@ class _ChatViewState extends State<ChatView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background image rotation
-          PageView.builder(
-            controller: _pageController,
-            itemCount: _imagePaths.length,
-            itemBuilder: (context, index) {
-              return Image.asset(
-                _imagePaths[index],
-                fit: BoxFit.cover,
-              );
-            },
-            scrollDirection: Axis.horizontal,
-          ),
-
-          // Chat content over the background
-          Column(
+      body: Obx(
+        () => SizedBox(
+          height: Get.height,
+          width: Get.width,
+          child: Column(
             children: [
               // Gradient AppBar with rounded corners
               Container(
@@ -196,10 +178,10 @@ class _ChatViewState extends State<ChatView> {
                               .withOpacity(
                                   0.8), // Set the background color with opacity
                           itemBuilder: (context) => [
-                            PopupMenuItem(
+                            const PopupMenuItem(
                               value: 1,
                               child: Row(
-                                children: const [
+                                children: [
                                   Icon(Icons.block, color: Colors.white),
                                   SizedBox(width: 10),
                                   Text('Block User',
@@ -207,10 +189,10 @@ class _ChatViewState extends State<ChatView> {
                                 ],
                               ),
                             ),
-                            PopupMenuItem(
+                            const PopupMenuItem(
                               value: 2,
                               child: Row(
-                                children: const [
+                                children: [
                                   Icon(Icons.chat_bubble_outline,
                                       color: Colors.white),
                                   SizedBox(width: 10),
@@ -239,7 +221,7 @@ class _ChatViewState extends State<ChatView> {
               // Chat list (Chat messages)
               Expanded(
                 child: Stack(
-                  children: const [
+                  children: [
                     Center(
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
@@ -249,27 +231,22 @@ class _ChatViewState extends State<ChatView> {
                         ),
                       ),
                     ),
-                    ChatBubble(
-                        isSender: false,
-                        text: "Lorem ipsum is a demo text",
-                        time: "7:10 AM"),
-                    ChatBubble(
-                        isSender: true,
-                        text: "Lorem ipsum is a demo text",
-                        time: "7:10 AM"),
-                    ChatBubble(
-                        isSender: false,
-                        text: "Lorem ipsum is a demo text",
-                        time: "7:10 AM"),
-                    ChatBubble(
-                        isSender: true,
-                        text: "Lorem ipsum is a demo text",
-                        time: "7:10 AM"),
-                    ChatBubble(
-                        isSender: false,
-                        text: "Lorem ipsum is a demo text",
-                        time: "7:10 AM"),
-                    // Add more ChatBubble widgets as needed
+                    ...chatController.messages
+                        .sublist(
+                          chatController.messages.length >= 5
+                              ? chatController.messages.length - 5
+                              : 0,
+                        )
+                        .map(
+                          (element) => ChatBubble(
+                            isSender: element['isSender'] ??
+                                false, // Assuming messages have 'isSender' field
+                            text:
+                                "${element["message"]}", // Assuming messages have 'message' field
+                            time:
+                                "7:10 AM", // Adjust time based on the message if needed
+                          ),
+                        ),
                   ],
                 ),
               ),
@@ -278,13 +255,15 @@ class _ChatViewState extends State<ChatView> {
               buildMessageInputField(),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget buildMessageInputField() {
     return Container(
+      height: 50,
+      width: Get.width,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -295,40 +274,26 @@ class _ChatViewState extends State<ChatView> {
       ),
       child: Row(
         children: [
-          Padding(
-            padding: EdgeInsets.only(top: 5),
-            child: Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-          ),
-          SizedBox(width: 16),
           Expanded(
             child: TextField(
-              decoration: InputDecoration(
-                hintText: "Type a message...",
-                hintStyle: TextStyle(color: Colors.white),
+              controller: _messageController,
+              decoration: const InputDecoration(
+                hintText: 'Type a message...',
                 border: InputBorder.none,
               ),
-              style: TextStyle(color: Colors.white),
             ),
           ),
-          SizedBox(width: 16),
-          InkWell(
-              onTap: () async {
-                GiphyGif? gif = await GiphyGet.getGif(
-                  context: context, //Required
-                  apiKey: "s9ZjuJ6GRnhhi6OlY96DbOAeSFTWU7Q9", //Required.
-                  lang: GiphyLanguage.english, //Optional - Language for query.
-                  randomID:
-                      "abcd", // Optional - An ID/proxy for a specific user.
-                  tabColor: Colors.teal,
-                  // Optional- default accent color.
-                  debounceTimeInMilliseconds:
-                      350, // Optional- time to pause between search keystrokes
-                );
-              },
-              child: Icon(Icons.emoji_emotions, color: Colors.white)),
-          20.kwidthBox,
-          InkWell(
-              onTap: () async {}, child: Icon(Icons.send, color: Colors.white)),
+          IconButton(
+            icon: const Icon(Icons.send, color: Colors.white),
+            onPressed: () {
+              String message = _messageController.text.trim();
+              if (message.isNotEmpty) {
+                chatController.sendMessage(
+                    widget.userId, widget.targetUserId, message);
+                _messageController.clear();
+              }
+            },
+          ),
         ],
       ),
     );

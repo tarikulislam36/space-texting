@@ -49,23 +49,36 @@ class VideoCallView extends GetView<VideoCallController> {
                                   children: [
                                     // Mute button
                                     CircleAvatar(
-                                      backgroundColor: Colors.black54,
+                                      backgroundColor: controller.isMuted.value
+                                          ? Colors.amber
+                                          : Colors.black54,
                                       child: IconButton(
-                                        icon: Icon(Icons.mic,
+                                        icon: Icon(
+                                            controller.isMuted.value
+                                                ? Icons.mic_off_rounded
+                                                : Icons.mic,
                                             color: Colors.white),
                                         onPressed: () {
                                           // Implement mute functionality
+                                          controller.toggleMute();
                                         },
                                       ),
                                     ),
                                     // Speaker button
                                     CircleAvatar(
-                                      backgroundColor: Colors.black54,
+                                      backgroundColor:
+                                          !controller.isSpeakerEnabled.value
+                                              ? Colors.amber
+                                              : Colors.black54,
                                       child: IconButton(
-                                        icon: Icon(Icons.volume_up,
+                                        icon: Icon(
+                                            !controller.isSpeakerEnabled.value
+                                                ? Icons.volume_off_rounded
+                                                : Icons.volume_up,
                                             color: Colors.white),
                                         onPressed: () {
                                           // Implement speaker functionality
+                                          controller.toggleSpeaker();
                                         },
                                       ),
                                     ),
@@ -84,10 +97,12 @@ class VideoCallView extends GetView<VideoCallController> {
                                     CircleAvatar(
                                       backgroundColor: Colors.black54,
                                       child: IconButton(
-                                        icon: Icon(Icons.chat,
+                                        icon: const Icon(
+                                            Icons.rotate_left_rounded,
                                             color: Colors.white),
                                         onPressed: () {
                                           // Implement chat functionality
+                                          controller.rotateCamera();
                                         },
                                       ),
                                     ),

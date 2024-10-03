@@ -96,6 +96,8 @@ class ChatCard extends StatelessWidget {
               name: name,
               profileImage: profileImage,
               isOnline: isOnline,
+              targetUserId: "joysarkar",
+              userId: "adadasjdkhsa",
             ));
       },
     );
