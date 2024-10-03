@@ -62,18 +62,21 @@ class SignupSuccessController extends GetxController {
 
       final firebaseToken =
           await FirebaseAuth.instance.currentUser?.getIdToken() ?? '';
-      final response =
-          await _registerUser(phoneNo, notificationToken, firebaseToken);
+      // final response =
+      //     await _registerUser(phoneNo, notificationToken, firebaseToken);
 
-      if (response['status'] == true) {
-        // Navigate to the Allow Notifications screen
-        Get.offAllNamed(
-          Routes.ALLOW_NOTIFICATION,
-        );
-      } else {
-        Get.snackbar('Error', response['message'],
-            backgroundColor: Colors.red, colorText: Colors.white);
-      }
+      // if (response['status'] == true) {
+      //   // Navigate to the Allow Notifications screen
+      //   Get.offAllNamed(
+      //     Routes.ALLOW_NOTIFICATION,
+      //   );
+      // } else {
+      //   Get.snackbar('Error', response['message'],
+      //       backgroundColor: Colors.red, colorText: Colors.white);
+      // }
+      Get.offAllNamed(
+        Routes.ALLOW_NOTIFICATION,
+      );
     } catch (e) {
       Get.snackbar('Error', '${e.toString()}',
           backgroundColor: Colors.red, colorText: Colors.white);
