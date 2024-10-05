@@ -57,8 +57,13 @@ class _ChatViewState extends State<ChatView> {
 
   List<Color> _generateRandomGradientColors() {
     final Random random = Random();
-    final double hue =
-        random.nextDouble() * 360; // Random hue between 0 and 360
+    double hue;
+
+    // Generate a hue that does not fall within the green range (90-150 degrees)
+    do {
+      hue = random.nextDouble() * 360; // Random hue between 0 and 360
+    } while (hue >= 90 && hue <= 150); // Repeat until we get a valid hue
+
     final double saturation =
         0.5 + random.nextDouble() * 0.5; // Random saturation between 0.5 and 1
     final double lightness = 0.5; // Fixed lightness to ensure readability
@@ -125,8 +130,13 @@ class _ChatViewState extends State<ChatView> {
                           child: Row(
                             children: [
                               CircleAvatar(
-                                backgroundImage:
-                                    NetworkImage(widget.profileImage),
+                                backgroundImage: widget.profileImage.isEmpty
+                                    ? const AssetImage(
+                                        "assets/default_user.jpg") // Provide a default local asset image
+                                    : NetworkImage(
+                                        widget
+                                            .profileImage) as ImageProvider<
+                                        Object>, // Use the profile image URL
                                 radius: 24,
                               ),
                               const SizedBox(width: 10),
