@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:contacts_service/contacts_service.dart';
 import 'package:space_texting/app/modules/chat/views/chat_view.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/constants/assets.dart';
@@ -45,26 +44,20 @@ class SelectChatView extends GetView<SelectChatController> {
                     Assets.assetsBackground,
                   ),
                   fit: BoxFit.cover)),
-          child: ListView.builder(
-            itemCount: controller.userExistenceData.length,
-            itemBuilder: (context, index) {
-              return controller.userExistenceData[index].exists
+          child: ListView(
+            children: [
+              ...controller.userExistenceData.map((element) => element.exists
                   ? InkWell(
                       onTap: () {
-                        Get.to(() => ChatView(
+                        Get.off(() => ChatView(
                               name: controller
-                                      .phoneContactMap[controller
-                                          .userExistenceData[index].phoneNumber]
+                                      .phoneContactMap[element.phoneNumber]
                                       ?.displayName ??
-                                  controller
-                                      .userExistenceData[index].phoneNumber,
+                                  element.phoneNumber,
                               profileImage: "",
-                              targetUserId:
-                                  controller.userExistenceData[index].user!.uid,
+                              targetUserId: element.user!.uid,
                               userId: FirebaseAuth.instance.currentUser!.uid,
                             ));
-
-                        print(controller.userExistenceData[index].user!.uid);
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 6, top: 10),
@@ -75,31 +68,46 @@ class SelectChatView extends GetView<SelectChatController> {
                             radius: 25,
                           ),
                           title: Text(
-                            controller.userExistenceData[index].exists
+                            element.exists
                                 ? controller
-                                        .phoneContactMap[controller
-                                            .userExistenceData[index]
-                                            .phoneNumber]
+                                        .phoneContactMap[element.phoneNumber]
                                         ?.displayName ??
-                                    controller
-                                        .userExistenceData[index].phoneNumber
+                                    element.phoneNumber
                                 : "No Name",
                             style: const TextStyle(color: Colors.white),
                           ),
                           // Contact name
-                          trailing: !controller.userExistenceData[index].exists
-                              ? ElevatedButton(
-                                  onPressed: () {
-                                    // Invite action
-                                  },
-                                  child: const Text('Invite'),
-                                )
-                              : const SizedBox(),
                         ),
                       ),
                     )
-                  : const SizedBox();
-            },
+                  : const SizedBox()),
+              ...controller.userExistenceData.map((element) => !element.exists
+                  ? InkWell(
+                      onTap: () {},
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 6, top: 10),
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundImage: AssetImage(
+                                "assets/default_user.jpg"), // Default image
+                            radius: 25,
+                          ),
+                          title: Text(
+                            controller.phoneContactMap[element.phoneNumber]
+                                    ?.displayName ??
+                                element.phoneNumber,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          trailing: ElevatedButton(
+                            onPressed: () {},
+                            child: const Text("Invite"),
+                          ),
+                          // Contact name
+                        ),
+                      ),
+                    )
+                  : const SizedBox()),
+            ],
           ),
         );
       }),

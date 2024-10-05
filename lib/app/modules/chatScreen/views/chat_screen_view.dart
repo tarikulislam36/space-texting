@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:space_texting/app/components/gif_video_player.dart';
 import 'package:space_texting/app/modules/chat/views/chat_view.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
@@ -19,7 +20,7 @@ class ChatCard extends StatelessWidget {
   final bool isOnline;
 
   const ChatCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.message,
     required this.time,
@@ -28,7 +29,7 @@ class ChatCard extends StatelessWidget {
     this.unreadCount = 0,
     required this.profileImage,
     this.isOnline = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -154,122 +155,6 @@ class ChatScreenView extends GetView<ChatScreenController> {
                       fontWeight: FontWeight.w600),
                 ),
               ],
-            ),
-            ChatCard(
-              name: 'Name, 18',
-              message: 'Kinda nothing, just playing Fortnite...',
-              time: 'Now',
-              isUnread: true,
-              unreadCount: 1,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCp_ByMCZW8m0s3KmAbIENDvR2Zc_HkBJyYw&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 21',
-              message: '',
-              time: '2 min',
-              isTyping: true,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&s',
-              isOnline: true,
-            ),
-            // Add more ChatCards here...
-            ChatCard(
-              name: 'Name, 18',
-              message: 'Kinda nothing, just playing Fortnite...',
-              time: 'Now',
-              isUnread: true,
-              unreadCount: 1,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCp_ByMCZW8m0s3KmAbIENDvR2Zc_HkBJyYw&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 21',
-              message: '',
-              time: '2 min',
-              isTyping: true,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 18',
-              message: 'Kinda nothing, just playing Fortnite...',
-              time: 'Now',
-              isUnread: true,
-              unreadCount: 1,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCp_ByMCZW8m0s3KmAbIENDvR2Zc_HkBJyYw&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 21',
-              message: '',
-              time: '2 min',
-              isTyping: true,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 18',
-              message: 'Kinda nothing, just playing Fortnite...',
-              time: 'Now',
-              isUnread: true,
-              unreadCount: 1,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCp_ByMCZW8m0s3KmAbIENDvR2Zc_HkBJyYw&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 21',
-              message: '',
-              time: '2 min',
-              isTyping: true,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 18',
-              message: 'Kinda nothing, just playing Fortnite...',
-              time: 'Now',
-              isUnread: true,
-              unreadCount: 1,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCp_ByMCZW8m0s3KmAbIENDvR2Zc_HkBJyYw&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 21',
-              message: '',
-              time: '2 min',
-              isTyping: true,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&s',
-              isOnline: true,
-            ),
-
-            ChatCard(
-              name: 'Name, 18',
-              message: 'Kinda nothing, just playing Fortnite...',
-              time: 'Now',
-              isUnread: true,
-              unreadCount: 1,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCp_ByMCZW8m0s3KmAbIENDvR2Zc_HkBJyYw&s',
-              isOnline: true,
-            ),
-            ChatCard(
-              name: 'Name, 21',
-              message: '',
-              time: '2 min',
-              isTyping: true,
-              profileImage:
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&s',
-              isOnline: true,
             ),
           ],
         ),

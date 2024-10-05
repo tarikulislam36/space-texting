@@ -1,15 +1,23 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:giphy_get/giphy_get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:space_texting/app/components/custom_button.dart';
+import 'package:space_texting/app/components/gif_video_player.dart';
 import 'package:space_texting/app/modules/chat/controllers/chat_controller.dart';
 import 'package:space_texting/app/modules/chat/views/bubble_chat.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
+import 'package:space_texting/app/services/socket_io_service.dart';
 import 'package:space_texting/constants/assets.dart';
+import 'package:image/image.dart' as img; // Importing the image package
+import 'package:path/path.dart' as path;
 
 class ChatView extends StatefulWidget {
   final String name;
@@ -37,12 +45,159 @@ class _ChatViewState extends State<ChatView> {
   ChatController chatController = Get.put(ChatController());
   final _messageController = TextEditingController();
 
-  final List<String> _imagePaths = [
-    Assets.assetsBg1,
-    Assets.assetsBg2,
-    Assets.assetsBg3,
-    Assets.assetsBg4,
-  ];
+  void _showMediaOptions(BuildContext context) {
+    showModalBottomSheet(
+      backgroundColor: Color.fromARGB(255, 34, 14, 66),
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Wrap(
+            children: [
+              InkWell(
+                onTap: () {},
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.image,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Image',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    // Handle image selection here
+                    await _pickAndUploadImage();
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              InkWell(
+                onTap: () {},
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.insert_drive_file,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Document',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    // Handle document selection here
+                    await _pickAndUploadDocument();
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              InkWell(
+                onTap: () {},
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.location_on,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Location',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    // Handle location sharing here
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      File imageFile = File(image.path);
+
+      // Compress the image
+      File? compressedImageFile = await _compressImage(imageFile);
+
+      if (compressedImageFile != null) {
+        try {
+          String downloadUrl =
+              await _uploadToFirebase(compressedImageFile, 'images');
+          print('Image uploaded successfully. URL: $downloadUrl');
+        } catch (e) {
+          print('Error uploading image: $e');
+        }
+      }
+    }
+  }
+
+// Function to compress the image
+  Future<File?> _compressImage(File imageFile) async {
+    try {
+      // Read the image file
+      final img.Image originalImage =
+          img.decodeImage(await imageFile.readAsBytes())!;
+
+      // Resize the image (you can specify the width and height as needed)
+      final img.Image resizedImage =
+          img.copyResize(originalImage, width: 800); // Resize width to 800px
+
+      // Convert the resized image back to bytes
+      final List<int> compressedImageData =
+          img.encodeJpg(resizedImage, quality: 80); // Set quality to 80
+
+      // Create a new file to save the compressed image
+      final String fileName = path.basename(imageFile.path);
+      final File compressedFile =
+          File('${imageFile.parent.path}/compressed_$fileName');
+
+      // Write the compressed image data to the new file
+      await compressedFile.writeAsBytes(compressedImageData);
+
+      return compressedFile; // Return the compressed file
+    } catch (e) {
+      print('Error compressing image: $e');
+      return null;
+    }
+  }
+
+// Function to pick and upload a document
+  Future<void> _pickAndUploadDocument() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+    );
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+
+      try {
+        String downloadUrl = await _uploadToFirebase(file, 'documents');
+        print('Document uploaded successfully. URL: $downloadUrl');
+      } catch (e) {
+        print('Error uploading document: $e');
+      }
+    }
+  }
+
+// Function to upload files to Firebase Storage and return the download URL
+  Future<String> _uploadToFirebase(File file, String folder) async {
+    FirebaseStorage storage = FirebaseStorage.instance;
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    Reference ref = storage.ref().child('$folder/$fileName');
+
+    UploadTask uploadTask = ref.putFile(file);
+    TaskSnapshot snapshot = await uploadTask.whenComplete(() => {});
+
+    // Get download URL after successful upload
+    String downloadUrl = await snapshot.ref.getDownloadURL();
+    return downloadUrl;
+  }
 
   late List<Color> _gradientColors;
 
@@ -238,7 +393,7 @@ class _ChatViewState extends State<ChatView> {
               Expanded(
                 child: Stack(
                   children: [
-                    Center(
+                    const Center(
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
@@ -249,20 +404,24 @@ class _ChatViewState extends State<ChatView> {
                     ),
                     ...chatController.messages
                         .sublist(
-                          chatController.messages.length >= 5
-                              ? chatController.messages.length - 5
-                              : 0,
-                        )
+                      chatController.messages.length >= 5
+                          ? chatController.messages.length - 5
+                          : 0,
+                    )
                         .map(
-                          (element) => ChatBubble(
-                            isSender: element['isSender'] ??
-                                false, // Assuming messages have 'isSender' field
-                            text:
-                                "${element["message"]}", // Assuming messages have 'message' field
-                            time:
-                                "7:10 AM", // Adjust time based on the message if needed
-                          ),
-                        ),
+                      (element) {
+                        return ChatBubble(
+                          isSender: element['isSender'] ??
+                              false, // Assuming messages have 'isSender' field
+                          text:
+                              "${element["message"]}", // Assuming messages have 'message' field
+                          time: "7:10 AM",
+                          type: element["type"] ??
+                              identifyContentType(element[
+                                  "message"]), // Adjust time based on the message if needed
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -278,7 +437,7 @@ class _ChatViewState extends State<ChatView> {
 
   Widget buildMessageInputField() {
     return Container(
-      height: 50,
+      height: 60,
       width: Get.width,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -290,6 +449,14 @@ class _ChatViewState extends State<ChatView> {
       ),
       child: Row(
         children: [
+          // "+" Icon for opening media options (moved to the left)
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded,
+                color: Colors.white),
+            onPressed: () {
+              _showMediaOptions(context);
+            }, // Open media options when tapped
+          ),
           Expanded(
             child: TextField(
               controller: _messageController,
@@ -299,13 +466,34 @@ class _ChatViewState extends State<ChatView> {
               ),
             ),
           ),
+
+          IconButton(
+            icon: const Icon(Icons.emoji_emotions, color: Colors.white),
+            onPressed: () async {
+              GiphyGif? gif = await GiphyGet.getGif(
+                context: context, //Required
+                apiKey: "s9ZjuJ6GRnhhi6OlY96DbOAeSFTWU7Q9", //Required.
+                // Optional - An ID/proxy for a specific user.
+                tabColor: const Color.fromARGB(
+                    255, 25, 22, 61), // Optional- default accent color.
+                debounceTimeInMilliseconds:
+                    350, // Optional- time to pause between search keystrokes
+              );
+              if (gif != null) {
+                chatController.sendMessage(widget.userId, widget.targetUserId,
+                    gif.images!.downsizedSmall!.mp4, "gif");
+              }
+              print(gif!.images!.downsizedSmall!.mp4);
+            }, // Open media options when tapped
+          ),
+          // Send message icon
           IconButton(
             icon: const Icon(Icons.send, color: Colors.white),
             onPressed: () {
               String message = _messageController.text.trim();
               if (message.isNotEmpty) {
                 chatController.sendMessage(
-                    widget.userId, widget.targetUserId, message);
+                    widget.userId, widget.targetUserId, message, "message");
                 _messageController.clear();
               }
             },

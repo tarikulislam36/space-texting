@@ -31,19 +31,22 @@ class ChatController extends GetxController {
 
     // Listen for incoming messages
     socketService.socket?.on('receive_message', (data) {
+      print("data get ${data}");
       messages.add(data); // Add the received message to the list
     });
   }
 
   // Send a message
-  void sendMessage(String senderId, String receiverId, String message) {
+  void sendMessage(
+      String senderId, String receiverId, String message, String type) {
     if (isConnected.value) {
-      socketService.sendMessage(senderId, receiverId, message);
+      socketService.sendMessage(senderId, receiverId, message, type);
       messages.add({
         'senderId': senderId,
         'receiverId': receiverId,
         'message': message,
         'isSender': true,
+        "type": type,
       });
     } else {
       print('Not connected to the socket');

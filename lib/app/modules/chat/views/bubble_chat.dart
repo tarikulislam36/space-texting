@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:space_texting/app/components/gif_video_player.dart';
 
 class ChatBubble extends StatefulWidget {
   final String text;
@@ -7,6 +8,7 @@ class ChatBubble extends StatefulWidget {
   final String time;
   final bool hasImage;
   final String? imagePath;
+  final String type;
 
   const ChatBubble({
     Key? key,
@@ -15,6 +17,7 @@ class ChatBubble extends StatefulWidget {
     required this.time,
     this.hasImage = false,
     this.imagePath,
+    required this.type,
   }) : super(key: key);
 
   @override
@@ -87,6 +90,21 @@ class _ChatBubbleState extends State<ChatBubble>
     return Color.fromRGBO(r, g, b, 1);
   }
 
+  double calculateTextWidth(String text, TextStyle style,
+      {double maxWidth = double.infinity}) {
+    // Create a TextPainter to measure the width of the text
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: 1, // Set to 1 to measure single line width
+      textDirection: TextDirection.ltr, // Set the text direction
+    );
+
+    textPainter.layout(
+        maxWidth: maxWidth); // Layout the text painter to calculate width
+
+    return textPainter.width; // Return the calculated width
+  }
+
   // Function to generate a random position for the bubble within screen bounds
   Offset _getRandomPosition() {
     final double maxX = screenWidth - 120; // Subtract bubble size
@@ -131,44 +149,45 @@ class _ChatBubbleState extends State<ChatBubble>
                   : CrossAxisAlignment.end,
               children: [
                 Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.white70,
-                        bubbleColor,
-                      ],
-                      center: Alignment.center,
-                      radius: 0.8,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        offset: const Offset(4, 4),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  ),
+                  width: widget.type == "gif"
+                      ? 150
+                      : widget.text.length > 40
+                          ? 200
+                          : 120,
+                  height: widget.type == "gif"
+                      ? 150
+                      : widget.text.length > 40
+                          ? 200
+                          : 120,
+                  decoration: widget.type == "message"
+                      ? BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              Colors.white70,
+                              bubbleColor,
+                            ],
+                            center: Alignment.center,
+                            radius: 0.8,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              offset: const Offset(4, 4),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        )
+                      : null,
                   child: Center(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: widget.hasImage && widget.imagePath != null
-                          ? Column(
-                              children: [
-                                Text(
-                                  widget.text,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Image.asset(widget.imagePath!,
-                                    width: 40, height: 40),
-                              ],
+                      child: widget.type == "gif"
+                          ? Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: GifVideoPlayer(videoUrl: widget.text)),
                             )
                           : Text(
                               widget.text,
