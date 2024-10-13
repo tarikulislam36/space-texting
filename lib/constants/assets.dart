@@ -30,6 +30,10 @@ class Assets {
   /// assets/bg4.jpg
   static const String assetsBg4 = "assets/bg4.jpg";
 
+  /// Assets for assetsDefaultUser
+  /// assets/default_user.jpg
+  static const String assetsDefaultUser = "assets/default_user.jpg";
+
   /// Assets for assetsGetStarted
   /// assets/get_started.png
   static const String assetsGetStarted = "assets/get_started.png";

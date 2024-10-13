@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -64,6 +65,33 @@ class SignupSuccessController extends GetxController {
           await FirebaseAuth.instance.currentUser?.getIdToken() ?? '';
       final response =
           await _registerUser(phoneNo, notificationToken, firebaseToken);
+
+      final userDoc = FirebaseFirestore.instance
+          .collection("users")
+          .doc(FirebaseAuth.instance.currentUser!.uid);
+
+      userDoc.get().then((docSnapshot) {
+        if (!docSnapshot.exists) {
+          // The document doesn't exist, so set the data
+          userDoc.set({
+            "name": "",
+            "phoneNumber": phoneNo,
+            "status": "active",
+            "profilePic": "",
+            "notificationToken": notificationToken,
+            "createdAt": DateTime.now(),
+            "uid": FirebaseAuth.instance.currentUser!.uid,
+          }).then((_) {
+            print("Data has been set successfully!");
+          }).catchError((error) {
+            print("Error setting data: $error");
+          });
+        } else {
+          print("Document already exists. No need to set data.");
+        }
+      }).catchError((error) {
+        print("Error fetching document: $error");
+      });
 
       if (response['status'] == true) {
         // Navigate to the Allow Notifications screen

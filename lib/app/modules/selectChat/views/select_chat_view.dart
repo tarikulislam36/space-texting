@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:space_texting/app/modules/chat/views/chat_view.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/constants/assets.dart';
@@ -99,7 +100,10 @@ class SelectChatView extends GetView<SelectChatController> {
                             style: const TextStyle(color: Colors.white),
                           ),
                           trailing: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Share.share(
+                                  'check out my App https://example.com');
+                            },
                             child: const Text("Invite"),
                           ),
                           // Contact name

@@ -8,11 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:giphy_get/giphy_get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:space_texting/app/components/custom_button.dart';
 import 'package:space_texting/app/components/gif_video_player.dart';
 import 'package:space_texting/app/modules/chat/controllers/chat_controller.dart';
 import 'package:space_texting/app/modules/chat/views/bubble_chat.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
+import 'package:space_texting/app/services/dialog_helper.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/app/services/socket_io_service.dart';
 import 'package:space_texting/constants/assets.dart';
@@ -125,11 +127,25 @@ class _ChatViewState extends State<ChatView> {
       File? compressedImageFile = await _compressImage(imageFile);
 
       if (compressedImageFile != null) {
+        DialogHelper.showLoading();
         try {
           String downloadUrl =
               await _uploadToFirebase(compressedImageFile, 'images');
+          if (downloadUrl.isNotEmpty) {
+            chatController.sendMessage(
+                widget.userId,
+                widget.targetUserId,
+                downloadUrl,
+                "photo",
+                DateFormat('h:mma').format(DateTime.now()).toLowerCase(),
+                DateFormat('MM-dd-yy').format(DateTime.now()),
+                widget.name);
+            _messageController.clear();
+          }
           print('Image uploaded successfully. URL: $downloadUrl');
+          DialogHelper.hideDialog();
         } catch (e) {
+          DialogHelper.hideDialog();
           print('Error uploading image: $e');
         }
       }
@@ -174,12 +190,25 @@ class _ChatViewState extends State<ChatView> {
     );
 
     if (result != null) {
+      DialogHelper.showLoading();
       File file = File(result.files.single.path!);
 
       try {
         String downloadUrl = await _uploadToFirebase(file, 'documents');
-        print('Document uploaded successfully. URL: $downloadUrl');
+        if (downloadUrl.isNotEmpty) {
+          chatController.sendMessage(
+              widget.userId,
+              widget.targetUserId,
+              downloadUrl,
+              "document",
+              DateFormat('h:mma').format(DateTime.now()).toLowerCase(),
+              DateFormat('MM-dd-yy').format(DateTime.now()),
+              widget.name);
+          _messageController.clear();
+        }
+        DialogHelper.hideDialog();
       } catch (e) {
+        DialogHelper.hideDialog();
         print('Error uploading document: $e');
       }
     }
@@ -239,6 +268,7 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   Widget build(BuildContext context) {
+    print("${widget.userId} llll ${widget.targetUserId}");
     return Scaffold(
       body: Obx(
         () => Container(
@@ -411,8 +441,9 @@ class _ChatViewState extends State<ChatView> {
                         .map(
                       (element) {
                         return ChatBubble(
+                          senderName: widget.name,
                           isSender: element['isSender'] ??
-                              false, // Assuming messages have 'isSender' field
+                              0, // Assuming messages have 'isSender' field
                           text:
                               "${element["message"]}", // Assuming messages have 'message' field
                           time: "7:10 AM",
@@ -480,8 +511,14 @@ class _ChatViewState extends State<ChatView> {
                     350, // Optional- time to pause between search keystrokes
               );
               if (gif != null) {
-                chatController.sendMessage(widget.userId, widget.targetUserId,
-                    gif.images!.downsizedSmall!.mp4, "gif");
+                chatController.sendMessage(
+                    widget.userId,
+                    widget.targetUserId,
+                    gif.images!.downsizedSmall!.mp4,
+                    "gif",
+                    DateFormat('h:mma').format(DateTime.now()).toLowerCase(),
+                    DateFormat('MM-dd-yy').format(DateTime.now()),
+                    widget.name);
               }
               print(gif!.images!.downsizedSmall!.mp4);
             }, // Open media options when tapped
@@ -493,7 +530,13 @@ class _ChatViewState extends State<ChatView> {
               String message = _messageController.text.trim();
               if (message.isNotEmpty) {
                 chatController.sendMessage(
-                    widget.userId, widget.targetUserId, message, "message");
+                    widget.userId,
+                    widget.targetUserId,
+                    message,
+                    "message",
+                    DateFormat('h:mma').format(DateTime.now()).toLowerCase(),
+                    DateFormat('MM-dd-yy').format(DateTime.now()),
+                    widget.name);
                 _messageController.clear();
               }
             },

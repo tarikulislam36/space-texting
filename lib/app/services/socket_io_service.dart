@@ -38,14 +38,16 @@ class SocketService {
   }
 
   // Send a message to the specific room (one-to-one)
-  void sendMessage(
-      String senderId, String receiverId, String message, String type) {
+  void sendMessage(String senderId, String receiverId, String message,
+      String type, String time, String date) {
     if (socket != null && socket!.connected) {
       socket?.emit('send_message', {
         'senderId': senderId,
         'receiverId': receiverId,
         'message': message,
         "type": type,
+        "time": time,
+        "date": date,
       });
     } else {
       print('Socket not connected');
@@ -65,27 +67,13 @@ String identifyContentType(String input) {
   }
 
   // Check if the input contains a photo extension
-  final photoExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
-  for (String extension in photoExtensions) {
-    if (input.endsWith(extension)) {
-      return 'photo';
-    }
+
+  if (input.contains("images")) {
+    return 'photo';
   }
 
-  // Check if the input contains a document extension
-  final documentExtensions = [
-    '.pdf',
-    '.doc',
-    '.docx',
-    '.xls',
-    '.xlsx',
-    '.ppt',
-    '.pptx'
-  ];
-  for (String extension in documentExtensions) {
-    if (input.endsWith(extension)) {
-      return 'document';
-    }
+  if (input.contains("documents")) {
+    return 'document';
   }
 
   // If no match is found, return unknown

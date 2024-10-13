@@ -33,10 +33,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -64,5 +61,15 @@ class DefaultFirebaseOptions {
     projectId: 'space-text-1a5c7',
     storageBucket: 'space-text-1a5c7.appspot.com',
     iosBundleId: 'com.joy.spaceTexting',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCRsUa-_bRFe-OMBuatmdpe1Y6CqXPPv7M',
+    appId: '1:918605907062:web:a2f950d851786edb080b57',
+    messagingSenderId: '918605907062',
+    projectId: 'space-text-1a5c7',
+    authDomain: 'space-text-1a5c7.firebaseapp.com',
+    storageBucket: 'space-text-1a5c7.appspot.com',
+    measurementId: 'G-ZQD4Y6VY8Y',
   );
 }

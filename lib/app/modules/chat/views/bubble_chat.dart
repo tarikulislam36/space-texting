@@ -1,14 +1,17 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:space_texting/app/components/gif_video_player.dart';
+import 'package:space_texting/app/routes/app_pages.dart';
 
 class ChatBubble extends StatefulWidget {
   final String text;
-  final bool isSender;
+  final int isSender;
   final String time;
   final bool hasImage;
-  final String? imagePath;
   final String type;
+
+  final String senderName;
 
   const ChatBubble({
     Key? key,
@@ -16,8 +19,8 @@ class ChatBubble extends StatefulWidget {
     required this.isSender,
     required this.time,
     this.hasImage = false,
-    this.imagePath,
     required this.type,
+    required this.senderName,
   }) : super(key: key);
 
   @override
@@ -90,21 +93,6 @@ class _ChatBubbleState extends State<ChatBubble>
     return Color.fromRGBO(r, g, b, 1);
   }
 
-  double calculateTextWidth(String text, TextStyle style,
-      {double maxWidth = double.infinity}) {
-    // Create a TextPainter to measure the width of the text
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      maxLines: 1, // Set to 1 to measure single line width
-      textDirection: TextDirection.ltr, // Set the text direction
-    );
-
-    textPainter.layout(
-        maxWidth: maxWidth); // Layout the text painter to calculate width
-
-    return textPainter.width; // Return the calculated width
-  }
-
   // Function to generate a random position for the bubble within screen bounds
   Offset _getRandomPosition() {
     final double maxX = screenWidth - 120; // Subtract bubble size
@@ -144,7 +132,7 @@ class _ChatBubbleState extends State<ChatBubble>
               });
             },
             child: Column(
-              crossAxisAlignment: widget.isSender
+              crossAxisAlignment: widget.isSender == 1
                   ? CrossAxisAlignment.start
                   : CrossAxisAlignment.end,
               children: [
@@ -189,22 +177,68 @@ class _ChatBubbleState extends State<ChatBubble>
                                   borderRadius: BorderRadius.circular(4),
                                   child: GifVideoPlayer(videoUrl: widget.text)),
                             )
-                          : Text(
-                              widget.text,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                          : widget.type == "photo"
+                              ? InkWell(
+                                  onTap: () {
+                                    Get.toNamed(Routes.SHOW_IMAGE, arguments: {
+                                      "img": widget.text,
+                                    });
+                                  },
+                                  child: Image.network(
+                                    widget.text,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(Icons.error),
+                                  ),
+                                )
+                              : widget.type == "document"
+                                  ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.insert_drive_file,
+                                          size: 50,
+                                          color: Colors.white70,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          widget.text,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    )
+                                  : Text(
+                                      widget.text,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
                     ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 4.0),
-                  child: Text(
-                    widget.time,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  child: Row(
+                    children: [
+                      Text(
+                        widget.isSender == 1 ? "Me " : widget.senderName + "  ",
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 12),
+                      ),
+                      Text(
+                        widget.time,
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 12),
+                      ),
+                    ],
                   ),
                 ),
               ],

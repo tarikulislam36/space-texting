@@ -22,6 +22,8 @@ import '../modules/profileScreen/bindings/profile_screen_binding.dart';
 import '../modules/profileScreen/views/profile_screen_view.dart';
 import '../modules/selectChat/bindings/select_chat_binding.dart';
 import '../modules/selectChat/views/select_chat_view.dart';
+import '../modules/showImage/bindings/show_image_binding.dart';
+import '../modules/showImage/views/show_image_view.dart';
 import '../modules/signin/bindings/signin_binding.dart';
 import '../modules/signin/views/signin_view.dart';
 import '../modules/signup/bindings/signup_binding.dart';
@@ -136,6 +138,11 @@ class AppPages {
       name: _Paths.SELECT_CHAT,
       page: () => const SelectChatView(),
       binding: SelectChatBinding(),
+    ),
+    GetPage(
+      name: _Paths.SHOW_IMAGE,
+      page: () => const ShowImageView(),
+      binding: ShowImageBinding(),
     ),
   ];
 }

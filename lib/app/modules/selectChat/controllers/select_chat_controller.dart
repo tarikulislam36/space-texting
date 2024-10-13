@@ -1,4 +1,5 @@
 import 'dart:convert'; // Add this for jsonEncode
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -183,6 +184,44 @@ class User {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
+      uid: json['uid'] ?? "", // Default to current date if null
+    );
+  }
+}
+
+// Model class for User
+class UserHome {
+  final String id;
+  final String name;
+  final String phoneNumber;
+  final String status;
+  final String profilePic;
+  final String notificationToken;
+  final Timestamp createdAt;
+  final String uid;
+
+  UserHome({
+    required this.id,
+    required this.name,
+    required this.phoneNumber,
+    required this.status,
+    required this.profilePic,
+    required this.notificationToken,
+    required this.createdAt,
+    required this.uid,
+  });
+
+  factory UserHome.fromJson(Map<String, dynamic> json) {
+    return UserHome(
+      id: json['_id'] ?? '', // Default to empty string if null
+      name: json['name'] ?? 'Unknown', // Default to 'Unknown' if null
+      phoneNumber: json['phoneNumber'] ?? '', // Default to empty string if null
+      status: json['status'] ?? 'inactive', // Default to 'inactive' if null
+      profilePic: json['profilePic'] ?? '', // Default to empty string if null
+      notificationToken:
+          json['notificationToken'] ?? '', // Default to empty string if null
+      createdAt: json['createdAt'],
+
       uid: json['uid'] ?? "", // Default to current date if null
     );
   }

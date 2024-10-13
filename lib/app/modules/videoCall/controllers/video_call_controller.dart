@@ -257,7 +257,7 @@ class VideoCallController extends GetxController {
     RTCVideoRenderer remoteVideo,
   ) async {
     var stream = await webrtc.navigator.mediaDevices
-        .getUserMedia({'video': true, 'audio': true});
+        .getUserMedia({'video': false, 'audio': true});
 
     localVideo.srcObject = stream;
     localStream = stream;

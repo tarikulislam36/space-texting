@@ -1,105 +1,105 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:space_texting/app/components/gif_video_player.dart';
 import 'package:space_texting/app/modules/chat/views/chat_view.dart';
+import 'package:space_texting/app/modules/selectChat/controllers/select_chat_controller.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/constants/assets.dart';
-
 import '../controllers/chat_screen_controller.dart';
 
 // Reusable ChatCard widget
 class ChatCard extends StatelessWidget {
-  final String name;
-  final String message;
-  final String time;
-  final bool isUnread;
-  final bool isTyping;
-  final int unreadCount;
-  final String profileImage;
-  final bool isOnline;
+  final Map userMap;
 
-  const ChatCard({
-    super.key,
-    required this.name,
-    required this.message,
-    required this.time,
-    this.isUnread = false,
-    this.isTyping = false,
-    this.unreadCount = 0,
-    required this.profileImage,
-    this.isOnline = false,
-  });
+  const ChatCard({Key? key, required this.userMap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Stack(
-        children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(profileImage), // Profile Image
-            radius: 25,
-          ),
-          if (isOnline)
-            const Positioned(
-              bottom: 0,
-              right: 0,
-              child: CircleAvatar(
-                backgroundColor: Colors.green,
-                radius: 6,
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection("users")
+          .doc(userMap["userId"])
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return SizedBox(); // Placeholder for loading state
+        }
+
+        UserHome user =
+            UserHome.fromJson(snapshot.data!.data()! as Map<String, dynamic>);
+
+        return ListTile(
+          leading: Stack(
+            children: [
+              CircleAvatar(
+                backgroundImage: user.profilePic.isNotEmpty
+                    ? NetworkImage(user.profilePic) as ImageProvider
+                    : AssetImage(Assets.assetsDefaultUser),
+                radius: 25,
               ),
+              if (user.status == "active")
+                const Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.green,
+                    radius: 6,
+                  ),
+                ),
+            ],
+          ),
+          title: Text(
+            "${userMap["name"]}",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-        ],
-      ),
-      title: Text(
-        name,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-      subtitle: Text(
-        isTyping ? 'typing...' : message,
-        style: TextStyle(
-          fontSize: 14,
-          color: isTyping ? Colors.greenAccent : Colors.grey[400],
-        ),
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            time,
+          ),
+          subtitle: Text(
+            "Last message or typing...", // Update with actual message
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               color: Colors.grey[400],
             ),
           ),
-          if (isUnread)
-            CircleAvatar(
-              backgroundColor: Colors.blueAccent,
-              radius: 10,
-              child: Text(
-                '$unreadCount',
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.white,
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "7:40", // Replace with actual time
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[400],
                 ),
               ),
-            ),
-        ],
-      ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-      onTap: () {
-        // Navigate to ChatView and pass necessary data
-        Get.to(() => ChatView(
-              name: name,
-              profileImage: profileImage,
-              isOnline: isOnline,
-              targetUserId: "joysarkar",
-              userId: "adadasjdkhsa",
-            ));
+              // Replace with actual unread message count
+              CircleAvatar(
+                backgroundColor: Colors.blueAccent,
+                radius: 10,
+                child: Text(
+                  '3', // Update with actual unread message count
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+          onTap: () {
+            // Navigate to ChatView and pass necessary data
+            Get.to(ChatView(
+                name: userMap["name"],
+                profileImage: user.profilePic,
+                targetUserId: user.uid,
+                userId: FirebaseAuth.instance.currentUser!.uid));
+          },
+        );
       },
     );
   }
@@ -107,7 +107,7 @@ class ChatCard extends StatelessWidget {
 
 // Main Chat Screen with Background and List of Chat Cards
 class ChatScreenView extends GetView<ChatScreenController> {
-  const ChatScreenView({super.key});
+  const ChatScreenView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -120,8 +120,9 @@ class ChatScreenView extends GetView<ChatScreenController> {
           height: 60,
           width: 60,
           decoration: BoxDecoration(
-              color: Colors.deepPurple,
-              borderRadius: BorderRadius.circular(13)),
+            color: Colors.deepPurple,
+            borderRadius: BorderRadius.circular(13),
+          ),
           child: const Center(
             child: Icon(
               Icons.add,
@@ -141,22 +142,32 @@ class ChatScreenView extends GetView<ChatScreenController> {
             fit: BoxFit.cover,
           ),
         ),
-        child: ListView(
-          physics: const BouncingScrollPhysics(),
-          children: const [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Chats",
-                  style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w600),
+        child: Obx(
+          () => controller.isLoading.value
+              ? Center(
+                  child: CircularProgressIndicator(),
+                )
+              : ListView(
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: Center(
+                        child: Text(
+                          "Chats",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    ...controller.allChats
+                        .map((e) => ChatCard(userMap: e))
+                        .toList(),
+                  ],
                 ),
-              ],
-            ),
-          ],
         ),
       ),
     );
