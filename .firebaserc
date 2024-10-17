@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "space-text-1a5c7"
+  },
+  "targets": {},
+  "etags": {
+    "space-text-1a5c7": {
+      "extensionInstances": {}
+    }
+  },
+  "dataconnectEmulatorConfig": {}
+}

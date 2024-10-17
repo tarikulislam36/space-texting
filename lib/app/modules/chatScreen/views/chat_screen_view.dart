@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:space_texting/app/modules/chat/views/chat_view.dart';
 import 'package:space_texting/app/modules/selectChat/controllers/select_chat_controller.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
+import 'package:space_texting/app/services/date_format.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/constants/assets.dart';
 import '../controllers/chat_screen_controller.dart';
@@ -13,7 +14,7 @@ import '../controllers/chat_screen_controller.dart';
 class ChatCard extends StatelessWidget {
   final Map userMap;
 
-  const ChatCard({Key? key, required this.userMap}) : super(key: key);
+  const ChatCard({super.key, required this.userMap});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class ChatCard extends StatelessWidget {
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return SizedBox(); // Placeholder for loading state
+          return const SizedBox(); // Placeholder for loading state
         }
 
         UserHome user =
@@ -36,7 +37,7 @@ class ChatCard extends StatelessWidget {
               CircleAvatar(
                 backgroundImage: user.profilePic.isNotEmpty
                     ? NetworkImage(user.profilePic) as ImageProvider
-                    : AssetImage(Assets.assetsDefaultUser),
+                    : const AssetImage(Assets.assetsDefaultUser),
                 radius: 25,
               ),
               if (user.status == "active")
@@ -59,7 +60,9 @@ class ChatCard extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            "Last message or typing...", // Update with actual message
+            userMap["lastMessage"].toString().contains("http")
+                ? "Media"
+                : "${userMap["lastMessage"]}", // Update with actual message
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[400],
@@ -67,24 +70,22 @@ class ChatCard extends StatelessWidget {
           ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                "7:40", // Replace with actual time
+                "${userMap["time"]}", // Replace with actual time
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[400],
                 ),
               ),
               // Replace with actual unread message count
-              CircleAvatar(
-                backgroundColor: Colors.blueAccent,
-                radius: 10,
-                child: Text(
-                  '3', // Update with actual unread message count
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.white,
-                  ),
+              Text(
+                getFormattedDate(
+                    userMap["date"]), // Update with actual unread message count
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -107,7 +108,7 @@ class ChatCard extends StatelessWidget {
 
 // Main Chat Screen with Background and List of Chat Cards
 class ChatScreenView extends GetView<ChatScreenController> {
-  const ChatScreenView({Key? key}) : super(key: key);
+  const ChatScreenView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -144,14 +145,14 @@ class ChatScreenView extends GetView<ChatScreenController> {
         ),
         child: Obx(
           () => controller.isLoading.value
-              ? Center(
+              ? const Center(
                   child: CircularProgressIndicator(),
                 )
               : ListView(
                   physics: const BouncingScrollPhysics(),
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
                       child: Center(
                         child: Text(
                           "Chats",
@@ -163,9 +164,7 @@ class ChatScreenView extends GetView<ChatScreenController> {
                         ),
                       ),
                     ),
-                    ...controller.allChats
-                        .map((e) => ChatCard(userMap: e))
-                        .toList(),
+                    ...controller.allChats.map((e) => ChatCard(userMap: e)),
                   ],
                 ),
         ),

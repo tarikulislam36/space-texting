@@ -34,6 +34,7 @@ class _ChatBubbleState extends State<ChatBubble>
   Offset _bubblePosition = Offset.zero;
   Offset _movementOffset = Offset.zero;
   Random random = Random();
+  bool showDeleteIcon = false;
 
   double screenWidth = 0;
   double screenHeight = 0;
@@ -113,6 +114,24 @@ class _ChatBubbleState extends State<ChatBubble>
     return Offset(moveX, moveY);
   }
 
+  // Function to handle long press event
+  void _onLongPress() {
+    _controller.stop(); // Stop the bubble animation
+    setState(() {
+      showDeleteIcon = true; // Show the delete icon
+    });
+  }
+
+  // Function to handle long press release event
+  void _onLongPressEnd() {
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() {
+        showDeleteIcon = false; // Hide the delete icon after 3 seconds
+        _controller.forward(); // Resume the animation
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // Get screen size for positioning bubbles randomly
@@ -125,104 +144,122 @@ class _ChatBubbleState extends State<ChatBubble>
           left: _bubblePosition.dx,
           top: _bubblePosition.dy,
           child: GestureDetector(
-            onTap: () {
-              // Change bubble position when tapped
-              setState(() {
-                _bubblePosition = _getRandomPosition();
-              });
-            },
+            onLongPress: _onLongPress,
+            onLongPressEnd: (details) => _onLongPressEnd(),
             child: Column(
               crossAxisAlignment: widget.isSender == 1
                   ? CrossAxisAlignment.start
                   : CrossAxisAlignment.end,
               children: [
-                Container(
-                  width: widget.type == "gif"
-                      ? 150
-                      : widget.text.length > 40
-                          ? 200
-                          : 120,
-                  height: widget.type == "gif"
-                      ? 150
-                      : widget.text.length > 40
-                          ? 200
-                          : 120,
-                  decoration: widget.type == "message"
-                      ? BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              Colors.white70,
-                              bubbleColor,
-                            ],
-                            center: Alignment.center,
-                            radius: 0.8,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              offset: const Offset(4, 4),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        )
-                      : null,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: widget.type == "gif"
-                          ? Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: GifVideoPlayer(videoUrl: widget.text)),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: widget.type == "gif"
+                          ? 150
+                          : widget.text.length > 40
+                              ? 200
+                              : 120,
+                      height: widget.type == "gif"
+                          ? 150
+                          : widget.text.length > 40
+                              ? 200
+                              : 120,
+                      decoration: widget.type == "message"
+                          ? BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.white70,
+                                  bubbleColor,
+                                ],
+                                center: Alignment.center,
+                                radius: 0.8,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  offset: const Offset(4, 4),
+                                  blurRadius: 10,
+                                ),
+                              ],
                             )
-                          : widget.type == "photo"
-                              ? InkWell(
-                                  onTap: () {
-                                    Get.toNamed(Routes.SHOW_IMAGE, arguments: {
-                                      "img": widget.text,
-                                    });
-                                  },
-                                  child: Image.network(
-                                    widget.text,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(Icons.error),
-                                  ),
+                          : null,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: widget.type == "gif"
+                              ? Padding(
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: GifVideoPlayer(
+                                          videoUrl: widget.text)),
                                 )
-                              : widget.type == "document"
-                                  ? Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.insert_drive_file,
-                                          size: 50,
-                                          color: Colors.white70,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
+                              : widget.type == "photo"
+                                  ? InkWell(
+                                      onTap: () {
+                                        Get.toNamed(Routes.SHOW_IMAGE,
+                                            arguments: {
+                                              "img": widget.text,
+                                            });
+                                      },
+                                      child: Image.network(
+                                        widget.text,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(Icons.error),
+                                      ),
+                                    )
+                                  : widget.type == "document"
+                                      ? Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.insert_drive_file,
+                                              size: 50,
+                                              color: Colors.white70,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              widget.text,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        )
+                                      : Text(
                                           widget.text,
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 12,
+                                            fontSize: 14,
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
-                                      ],
-                                    )
-                                  : Text(
-                                      widget.text,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
+                        ),
+                      ),
                     ),
-                  ),
+                    // Delete icon shown during long press
+                    if (showDeleteIcon)
+                      Positioned(
+                        top: 1,
+                        right: 10,
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: Colors.white, shape: BoxShape.circle),
+                          child: Icon(
+                            Icons.cancel,
+                            color: Colors.red,
+                            size: 30,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 4.0),

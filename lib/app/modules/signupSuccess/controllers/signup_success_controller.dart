@@ -88,6 +88,13 @@ class SignupSuccessController extends GetxController {
           });
         } else {
           print("Document already exists. No need to set data.");
+
+          FirebaseFirestore.instance
+              .collection("users")
+              .doc(FirebaseAuth.instance.currentUser!.uid)
+              .update({
+            "notificationToken": notificationToken,
+          });
         }
       }).catchError((error) {
         print("Error fetching document: $error");

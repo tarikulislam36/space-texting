@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
@@ -21,8 +22,22 @@ class AllowNotificationController extends GetxController {
     super.onClose();
   }
 
+  static const platform = MethodChannel('com.example/overlay_permission');
+
+  Future<void> requestOverlayPermission() async {
+    try {
+      await platform.invokeMethod('requestOverlayPermission');
+    } on PlatformException catch (e) {
+      print("Failed to request permission: ${e.message}");
+    }
+  }
+
   Future<void> requestPermissions() async {
     // List of permissions to request
+    requestOverlayPermission();
+    if (await Permission.systemAlertWindow.isDenied) {
+      await Permission.systemAlertWindow.request();
+    }
     Map<Permission, PermissionStatus> statuses = await [
       Permission.notification, // Notifications permission
       Permission.contacts, // Contacts permission

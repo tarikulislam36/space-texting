@@ -3,28 +3,32 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 class SocketService {
   IO.Socket? socket;
 
-  // Initialize and connect to Socket.IO server
   void connectSocket(String userId, String targetUserId) {
-    print("connect socket called");
-
     try {
       socket = IO.io('http://82.180.139.1:3000', <String, dynamic>{
         'transports': ['websocket'],
-        'autoConnect': false, // You can choose when to connect manually
+        'autoConnect': false,
       });
 
-      // Establish connection
       socket?.connect();
 
-      // Join the specific room for one-to-one chat
       socket?.onConnect((_) {
         print('Connected to the server');
         socket?.emit('join', {'userId': userId, 'targetUserId': targetUserId});
       });
 
-      // Listen for messages from the server
+      // Listen for messages
+      socket?.on('receive_message', (data) {
+        print('Message received: $data');
+        // Handle the incoming message (update the chat UI)
+      });
 
-      // Handle disconnection
+      // Listen for message deletions
+      socket?.on('message_deleted', (data) {
+        print('Message deleted: $data');
+        // Remove the message from the chat UI
+      });
+
       socket?.onDisconnect((_) {
         print('Disconnected from the server');
       });
@@ -33,11 +37,10 @@ class SocketService {
         print('Error: $data');
       });
     } catch (e) {
-      print("error $e");
+      print("Error: $e");
     }
   }
 
-  // Send a message to the specific room (one-to-one)
   void sendMessage(String senderId, String receiverId, String message,
       String type, String time, String date) {
     if (socket != null && socket!.connected) {
@@ -45,7 +48,22 @@ class SocketService {
         'senderId': senderId,
         'receiverId': receiverId,
         'message': message,
-        "type": type,
+        'type': type,
+        'time': time,
+        'date': date,
+      });
+    } else {
+      print('Socket not connected');
+    }
+  }
+
+  void deleteMessage(String senderId, String receiverId, String message,
+      String time, String date) {
+    if (socket != null && socket!.connected) {
+      socket?.emit('delete_message', {
+        'senderId': senderId,
+        'receiverId': receiverId,
+        "message": message,
         "time": time,
         "date": date,
       });
@@ -54,7 +72,6 @@ class SocketService {
     }
   }
 
-  // Disconnect the socket when not needed
   void disconnectSocket() {
     socket?.disconnect();
   }

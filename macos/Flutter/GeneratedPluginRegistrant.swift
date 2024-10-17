@@ -14,7 +14,7 @@ import firebase_storage
 import flutter_webrtc
 import path_provider_foundation
 import share_plus
-import sqflite_darwin
+import sqflite
 import url_launcher_macos
 import video_player_avfoundation
 

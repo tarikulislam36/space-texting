@@ -41,7 +41,7 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Joy Sarkar', // Replace with actual name
+                        'Alice Space', // Replace with actual name
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24,

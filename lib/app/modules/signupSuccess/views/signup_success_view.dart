@@ -51,13 +51,13 @@ class SignupSuccessView extends GetView<SignupSuccessController> {
                 children: [
                   Image.asset(
                     Assets.assetsLogin,
-                    width: 65.w,
+                    width: 50.w,
                   ),
                 ],
               ),
             ),
             GlossyContainer(
-              height: 60.h,
+              height: 68.h,
               width: 100.w,
               strengthY: 5,
               strengthX: 5,
@@ -74,7 +74,7 @@ class SignupSuccessView extends GetView<SignupSuccessController> {
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
-                      10.kheightBox,
+                      1.kheightBox,
                       const Text(
                         "Verification Code",
                         style: TextStyle(
@@ -93,6 +93,26 @@ class SignupSuccessView extends GetView<SignupSuccessController> {
                             color: Colors.white54,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Spacing between phone number and OTP input
+                      Pinput(
+                        length: 6, // Set the length of the OTP
+                        onChanged: (value) {
+                          controller.setOtpInput(value);
+                        },
+                        defaultPinTheme: PinTheme(
+                          width: 50,
+                          height: 50,
+                          textStyle: const TextStyle(
+                            fontSize: 24,
+                            color: Colors.white,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
                       ),
@@ -127,27 +147,7 @@ class SignupSuccessView extends GetView<SignupSuccessController> {
                           ],
                         ),
                       ),
-                      const SizedBox(
-                          height:
-                              20), // Spacing between phone number and OTP input
-                      Pinput(
-                        length: 6, // Set the length of the OTP
-                        onChanged: (value) {
-                          controller.setOtpInput(value);
-                        },
-                        defaultPinTheme: PinTheme(
-                          width: 50,
-                          height: 50,
-                          textStyle: const TextStyle(
-                            fontSize: 24,
-                            color: Colors.white,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                      ),
+
                       Spacer(),
                       CustomElevatedButton(
                         height: 50,

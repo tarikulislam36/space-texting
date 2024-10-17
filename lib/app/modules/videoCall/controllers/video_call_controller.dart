@@ -84,7 +84,7 @@ class VideoCallController extends GetxController {
 
   Future<String> createRoom(RTCVideoRenderer remoteRenderer) async {
     FirebaseFirestore db = FirebaseFirestore.instance;
-    DocumentReference roomRef = db.collection('rooms').doc("joysarkarcalltest");
+    DocumentReference roomRef = db.collection('rooms').doc();
 
     print('Create PeerConnection with configuration: $configuration');
 
@@ -257,7 +257,7 @@ class VideoCallController extends GetxController {
     RTCVideoRenderer remoteVideo,
   ) async {
     var stream = await webrtc.navigator.mediaDevices
-        .getUserMedia({'video': false, 'audio': true});
+        .getUserMedia({'video': true, 'audio': true});
 
     localVideo.srcObject = stream;
     localStream = stream;

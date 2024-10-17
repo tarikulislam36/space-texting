@@ -1,24 +1,21 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'package:file_picker/file_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:giphy_get/giphy_get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:space_texting/app/components/custom_button.dart';
-import 'package:space_texting/app/components/gif_video_player.dart';
 import 'package:space_texting/app/modules/chat/controllers/chat_controller.dart';
 import 'package:space_texting/app/modules/chat/views/bubble_chat.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
+import 'package:space_texting/app/services/date_format.dart';
 import 'package:space_texting/app/services/dialog_helper.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/app/services/socket_io_service.dart';
 import 'package:space_texting/constants/assets.dart';
-import 'package:image/image.dart' as img; // Importing the image package
+import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as path;
 
 class ChatView extends StatefulWidget {
@@ -43,13 +40,16 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
   late PageController _pageController;
-
   ChatController chatController = Get.put(ChatController());
   final _messageController = TextEditingController();
+  late Timer _backgroundTimer;
+  int _currentBackgroundIndex = 0;
+
+  // List of background images
 
   void _showMediaOptions(BuildContext context) {
     showModalBottomSheet(
-      backgroundColor: Color.fromARGB(255, 34, 14, 66),
+      backgroundColor: const Color.fromARGB(255, 34, 14, 66),
       context: context,
       builder: (context) {
         return Padding(
@@ -59,16 +59,10 @@ class _ChatViewState extends State<ChatView> {
               InkWell(
                 onTap: () {},
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.image,
-                    color: Colors.white,
-                  ),
-                  title: const Text(
-                    'Image',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  leading: const Icon(Icons.image, color: Colors.white),
+                  title: const Text('Image',
+                      style: TextStyle(color: Colors.white)),
                   onTap: () async {
-                    // Handle image selection here
                     await _pickAndUploadImage();
                     Navigator.pop(context);
                   },
@@ -77,34 +71,10 @@ class _ChatViewState extends State<ChatView> {
               InkWell(
                 onTap: () {},
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.insert_drive_file,
-                    color: Colors.white,
-                  ),
-                  title: const Text(
-                    'Document',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () async {
-                    // Handle document selection here
-                    await _pickAndUploadDocument();
-                    Navigator.pop(context);
-                  },
-                ),
-              ),
-              InkWell(
-                onTap: () {},
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.location_on,
-                    color: Colors.white,
-                  ),
-                  title: const Text(
-                    'Location',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  leading: const Icon(Icons.location_on, color: Colors.white),
+                  title: const Text('Location',
+                      style: TextStyle(color: Colors.white)),
                   onTap: () {
-                    // Handle location sharing here
                     Navigator.pop(context);
                   },
                 ),
@@ -122,8 +92,6 @@ class _ChatViewState extends State<ChatView> {
 
     if (image != null) {
       File imageFile = File(image.path);
-
-      // Compress the image
       File? compressedImageFile = await _compressImage(imageFile);
 
       if (compressedImageFile != null) {
@@ -152,69 +120,26 @@ class _ChatViewState extends State<ChatView> {
     }
   }
 
-// Function to compress the image
   Future<File?> _compressImage(File imageFile) async {
     try {
-      // Read the image file
       final img.Image originalImage =
           img.decodeImage(await imageFile.readAsBytes())!;
-
-      // Resize the image (you can specify the width and height as needed)
-      final img.Image resizedImage =
-          img.copyResize(originalImage, width: 800); // Resize width to 800px
-
-      // Convert the resized image back to bytes
+      final img.Image resizedImage = img.copyResize(originalImage, width: 800);
       final List<int> compressedImageData =
-          img.encodeJpg(resizedImage, quality: 80); // Set quality to 80
+          img.encodeJpg(resizedImage, quality: 80);
 
-      // Create a new file to save the compressed image
       final String fileName = path.basename(imageFile.path);
       final File compressedFile =
           File('${imageFile.parent.path}/compressed_$fileName');
 
-      // Write the compressed image data to the new file
       await compressedFile.writeAsBytes(compressedImageData);
-
-      return compressedFile; // Return the compressed file
+      return compressedFile;
     } catch (e) {
       print('Error compressing image: $e');
       return null;
     }
   }
 
-// Function to pick and upload a document
-  Future<void> _pickAndUploadDocument() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'doc', 'docx'],
-    );
-
-    if (result != null) {
-      DialogHelper.showLoading();
-      File file = File(result.files.single.path!);
-
-      try {
-        String downloadUrl = await _uploadToFirebase(file, 'documents');
-        if (downloadUrl.isNotEmpty) {
-          chatController.sendMessage(
-              widget.userId,
-              widget.targetUserId,
-              downloadUrl,
-              "document",
-              DateFormat('h:mma').format(DateTime.now()).toLowerCase(),
-              DateFormat('MM-dd-yy').format(DateTime.now()),
-              widget.name);
-          _messageController.clear();
-        }
-        DialogHelper.hideDialog();
-      } catch (e) {
-        DialogHelper.hideDialog();
-        print('Error uploading document: $e');
-      }
-    }
-  }
-
-// Function to upload files to Firebase Storage and return the download URL
   Future<String> _uploadToFirebase(File file, String folder) async {
     FirebaseStorage storage = FirebaseStorage.instance;
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
@@ -222,8 +147,6 @@ class _ChatViewState extends State<ChatView> {
 
     UploadTask uploadTask = ref.putFile(file);
     TaskSnapshot snapshot = await uploadTask.whenComplete(() => {});
-
-    // Get download URL after successful upload
     String downloadUrl = await snapshot.ref.getDownloadURL();
     return downloadUrl;
   }
@@ -233,29 +156,52 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
+
+    getChatBg();
     _pageController = PageController();
     _gradientColors = _generateRandomGradientColors();
 
+    // Initialize background image timer
+    _backgroundTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+      setState(() {
+        _currentBackgroundIndex = (_currentBackgroundIndex + 1) %
+            Get.find<ChatController>().backgroundImages.length;
+      });
+    });
+
     chatController.connectSocket(widget.userId, widget.targetUserId);
+  }
+
+  void getChatBg() async {
+    Map<String, dynamic> chatBg = await Get.find<ChatController>()
+            .dbHelper
+            .getChatBg(widget.targetUserId) ??
+        {};
+
+    print("Background Data : ${chatBg}");
+    int v = chatBg["isActive"] ?? 1;
+    chatController.isBgActive.value = v == 1;
+
+    if (chatBg["imageList"] != null && chatBg["imageList"].isNotEmpty) {
+      chatController.backgroundImages.value = chatBg["imageList"];
+    }
   }
 
   List<Color> _generateRandomGradientColors() {
     final Random random = Random();
     double hue;
 
-    // Generate a hue that does not fall within the green range (90-150 degrees)
     do {
-      hue = random.nextDouble() * 360; // Random hue between 0 and 360
-    } while (hue >= 90 && hue <= 150); // Repeat until we get a valid hue
+      hue = random.nextDouble() * 360;
+    } while (hue >= 90 && hue <= 150);
 
-    final double saturation =
-        0.5 + random.nextDouble() * 0.5; // Random saturation between 0.5 and 1
-    final double lightness = 0.5; // Fixed lightness to ensure readability
+    final double saturation = 0.5 + random.nextDouble() * 0.5;
+    final double lightness = 0.5;
 
     Color color1 = HSLColor.fromAHSL(1.0, hue, saturation, lightness).toColor();
     Color color2 =
         HSLColor.fromAHSL(1.0, (hue + 30) % 360, saturation, lightness)
-            .toColor(); // Slightly different hue
+            .toColor();
 
     return [color1, color2];
   }
@@ -263,202 +209,279 @@ class _ChatViewState extends State<ChatView> {
   @override
   void dispose() {
     _pageController.dispose();
+    _backgroundTimer.cancel(); // Cancel timer to avoid memory leak
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    print("${widget.userId} llll ${widget.targetUserId}");
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Obx(
-        () => Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(Assets.assetsBackground),
-              fit: BoxFit.cover,
-            ),
-          ),
-          height: Get.height,
-          width: Get.width,
-          child: Column(
+        () => GestureDetector(
+          onVerticalDragUpdate: (details) {
+            if (details.delta.dy < 0) {
+              // Swiping up - load previous messages
+              print("swip up");
+              if (!chatController.isMoreLoading.value) {
+                chatController.goUp();
+              }
+            } else if (details.delta.dy > 0) {
+              // Swiping down - load next messages
+              print("swipe down");
+              if (!chatController.isMoreLoading.value) {
+                chatController.goDown();
+              }
+            }
+          },
+          child: Stack(
             children: [
-              // Gradient AppBar with rounded corners
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: _gradientColors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(25),
-                    bottomRight: Radius.circular(25),
+              AnimatedSwitcher(
+                duration: Duration(seconds: 2),
+                child: Container(
+                  key: ValueKey<int>(_currentBackgroundIndex),
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: chatController.isBgActive.value
+                          ? chatController.backgroundImages[0]
+                                  .contains("com.joy.space_texting")
+                              ? FileImage(File(chatController.backgroundImages[
+                                  _currentBackgroundIndex])) as ImageProvider
+                              : AssetImage(Get.find<ChatController>()
+                                  .backgroundImages[_currentBackgroundIndex])
+                          : const AssetImage(Assets.assetsBackground),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0, vertical: 8),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon:
-                              const Icon(Icons.arrow_back, color: Colors.white),
-                          onPressed: () {
-                            Get.back(); // Navigate back to the previous screen
-                          },
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Get.toNamed(Routes.VIEW_PROFILE);
-                          },
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundImage: widget.profileImage.isEmpty
-                                    ? const AssetImage(
-                                        "assets/default_user.jpg") // Provide a default local asset image
-                                    : NetworkImage(
-                                        widget
-                                            .profileImage) as ImageProvider<
-                                        Object>, // Use the profile image URL
-                                radius: 24,
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.name,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    widget.isOnline ? 'Online' : 'Offline',
-                                    style: TextStyle(
-                                      color: widget.isOnline
-                                          ? Colors.greenAccent
-                                          : Colors.grey[300],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Spacer(),
-                        InkWell(
-                            onTap: () {
-                              Get.toNamed(Routes.VIDEO_CALL, arguments: {
-                                "callId": "joysarkarcalltest",
-                                "receiverId": "joysarkar",
-                                'isCaller': false,
-                              });
-                            },
-                            child: const Icon(Icons.call, color: Colors.white)),
-                        const SizedBox(width: 20),
-                        InkWell(
-                            onTap: () {
-                              Get.toNamed(Routes.VIDEO_CALL, arguments: {
-                                "callId": "joysarkarcalltest",
-                                "receiverId": "joysarkar",
-                                'isCaller': true,
-                              });
-                            },
-                            child: const Icon(Icons.videocam,
-                                color: Colors.white)),
-                        const SizedBox(width: 20),
-                        PopupMenuButton<int>(
-                          icon: const Icon(Icons.more_vert,
-                              color: Colors.white), // More options icon
-                          color: const Color.fromARGB(255, 44, 40, 40)
-                              .withOpacity(
-                                  0.8), // Set the background color with opacity
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 1,
+              ),
+              Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: _gradientColors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(25),
+                        bottomRight: Radius.circular(25),
+                      ),
+                    ),
+                    child: SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0, vertical: 8),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back,
+                                  color: Colors.white),
+                              onPressed: () {
+                                Get.back();
+                              },
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Get.toNamed(Routes.VIEW_PROFILE);
+                              },
                               child: Row(
                                 children: [
-                                  Icon(Icons.block, color: Colors.white),
-                                  SizedBox(width: 10),
-                                  Text('Block User',
-                                      style: TextStyle(color: Colors.white)),
+                                  CircleAvatar(
+                                    backgroundImage: widget.profileImage.isEmpty
+                                        ? const AssetImage(
+                                            "assets/default_user.jpg")
+                                        : NetworkImage(widget.profileImage)
+                                            as ImageProvider<Object>,
+                                    radius: 24,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.name,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        widget.isOnline ? 'Online' : 'Offline',
+                                        style: TextStyle(
+                                          color: widget.isOnline
+                                              ? Colors.greenAccent
+                                              : Colors.grey[300],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
-                              value: 2,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.chat_bubble_outline,
-                                      color: Colors.white),
-                                  SizedBox(width: 10),
-                                  Text('Clear Chat',
-                                      style: TextStyle(color: Colors.white)),
-                                ],
-                              ),
+                            const Spacer(),
+                            InkWell(
+                                onTap: () async {
+                                  Get.toNamed(Routes.VOICE_CALL, arguments: {
+                                    "receiverId": widget.targetUserId,
+                                    'isCaller': true,
+                                    'name': widget.name,
+                                    'profileImage': widget.profileImage,
+                                  });
+                                },
+                                child: const Icon(Icons.call,
+                                    color: Colors.white)),
+                            const SizedBox(width: 20),
+                            InkWell(
+                                onTap: () {
+                                  Get.toNamed(Routes.VIDEO_CALL, arguments: {
+                                    "receiverId": widget.targetUserId,
+                                    'isCaller': true,
+                                  });
+                                },
+                                child: const Icon(Icons.videocam,
+                                    color: Colors.white)),
+                            const SizedBox(width: 20),
+                            PopupMenuButton<int>(
+                              icon: const Icon(Icons.more_vert,
+                                  color: Colors.white),
+                              color: const Color.fromARGB(255, 44, 40, 40)
+                                  .withOpacity(0.8),
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 1,
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.block, color: Colors.white),
+                                      SizedBox(width: 10),
+                                      Text('Block User',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 2,
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.chat_bubble_outline,
+                                          color: Colors.white),
+                                      SizedBox(width: 10),
+                                      Text('Clear Chat',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 3,
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.image, color: Colors.white),
+                                      SizedBox(width: 10),
+                                      Text(
+                                          chatController.isBgActive.value
+                                              ? "Inavtive Background"
+                                              : 'Active Background',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              onSelected: (value) async {
+                                if (value == 1) {
+                                  print('Block User');
+                                } else if (value == 2) {
+                                  print('Clear Chat');
+                                } else if (value == 3) {
+                                  if (chatController.isBgActive.value) {
+                                    chatController.dbHelper
+                                        .insertOrUpdateChatBg(
+                                            widget.targetUserId, false, []);
+                                    chatController.isBgActive.value = false;
+                                    Get.snackbar(
+                                        "Message", "Background disabled");
+                                  } else {
+                                    final ImagePicker _picker = ImagePicker();
+                                    List<XFile>? images = await _picker
+                                        .pickMultiImage(); // open gallery and allow multiple selection
+
+                                    if (images != null && images.isNotEmpty) {
+                                      // Get the file paths of the selected images
+                                      List<String> imagePaths = images
+                                          .map((image) => image.path)
+                                          .toList();
+
+                                      // Store the paths in your database or list
+                                      chatController.dbHelper
+                                          .insertOrUpdateChatBg(
+                                              widget.targetUserId,
+                                              true,
+                                              imagePaths);
+                                      chatController.isBgActive.value = true;
+                                      chatController.backgroundImages.value =
+                                          imagePaths;
+                                      Get.snackbar("Message",
+                                          "Background updated with selected images");
+                                    } else {
+                                      Get.snackbar(
+                                          "Message", "No images selected");
+                                    }
+                                  }
+                                }
+                              },
                             ),
                           ],
-                          onSelected: (value) {
-                            if (value == 1) {
-                              // Handle Block User action
-                              print('Block User');
-                            } else if (value == 2) {
-                              // Handle Clear Chat action
-                              print('Clear Chat');
-                            }
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Text(
+                              chatController.messages.isNotEmpty
+                                  ? getFormattedDate(chatController
+                                      .messages.value.last["date"])
+                                  : "Today",
+                              style: TextStyle(
+                                  color: Colors.white54, fontSize: 14),
+                            ),
+                          ),
+                        ),
+                        ...chatController.messages
+                            .sublist(
+                          chatController.messages.length >= 5
+                              ? chatController.currentIndex.value - 6
+                              : 0,
+                          chatController.currentIndex.value - 1,
+                        )
+                            .map(
+                          (element) {
+                            return ChatBubble(
+                              senderName: widget.name,
+                              isSender: element['isSender'] ?? 0,
+                              text: "${element["message"]}",
+                              time: "${element["time"]}",
+                              type: element["type"] ??
+                                  identifyContentType(element["message"]),
+                            );
                           },
                         ),
                       ],
                     ),
                   ),
-                ),
+                  buildMessageInputField(),
+                ],
               ),
-
-              // Chat list (Chat messages)
-              Expanded(
-                child: Stack(
-                  children: [
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          'Today',
-                          style: TextStyle(color: Colors.white54, fontSize: 14),
-                        ),
-                      ),
-                    ),
-                    ...chatController.messages
-                        .sublist(
-                      chatController.messages.length >= 5
-                          ? chatController.messages.length - 5
-                          : 0,
-                    )
-                        .map(
-                      (element) {
-                        return ChatBubble(
-                          senderName: widget.name,
-                          isSender: element['isSender'] ??
-                              0, // Assuming messages have 'isSender' field
-                          text:
-                              "${element["message"]}", // Assuming messages have 'message' field
-                          time: "7:10 AM",
-                          type: element["type"] ??
-                              identifyContentType(element[
-                                  "message"]), // Adjust time based on the message if needed
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              // Message input field
-              buildMessageInputField(),
             ],
           ),
         ),
@@ -528,6 +551,10 @@ class _ChatViewState extends State<ChatView> {
             icon: const Icon(Icons.send, color: Colors.white),
             onPressed: () {
               String message = _messageController.text.trim();
+              if (message.length > 85) {
+                Get.snackbar("Error", "Message is so long!");
+                return;
+              }
               if (message.isNotEmpty) {
                 chatController.sendMessage(
                     widget.userId,

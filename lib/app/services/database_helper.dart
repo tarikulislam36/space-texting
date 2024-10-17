@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -47,6 +49,14 @@ class DatabaseHelper {
         date TEXT,
         time TEXT,
         lastMessage TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE chat_bg (
+        userId TEXT PRIMARY KEY,
+        isActive INT,
+        imageList TEXT
       )
     ''');
   }
@@ -104,5 +114,67 @@ class DatabaseHelper {
     );
 
     return result.isNotEmpty ? result.first : null;
+  }
+
+  // Insert or update chat background images for a user
+  Future<int> insertOrUpdateChatBg(
+      String userId, bool isActive, List<String> imageList) async {
+    final db = await database;
+
+    // Convert the imageList to a JSON string
+    String imageListJson = jsonEncode(imageList);
+
+    return await db.insert(
+      'chat_bg',
+      {
+        'userId': userId,
+        'isActive': isActive ? 1 : 0,
+        'imageList': imageListJson,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace, // Replace if exists
+    );
+  }
+
+  // Get chat background images for a specific user
+  Future<Map<String, dynamic>?> getChatBg(String userId) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> result = await db.query(
+      'chat_bg',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    if (result.isNotEmpty) {
+      // Create a new map to avoid modifying the read-only result map
+      Map<String, dynamic> chatBgData = Map<String, dynamic>.from(result.first);
+
+      // Decode the imageList JSON string back to a list of strings
+      List<String> imageList =
+          List<String>.from(jsonDecode(chatBgData['imageList']));
+      chatBgData['imageList'] = imageList; // Replace string with list
+
+      return chatBgData;
+    }
+
+    return null;
+  }
+
+  // Check if chat background is active for a specific user
+  Future<bool> isChatBgActive(String userId) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> result = await db.query(
+      'chat_bg',
+      columns: ['isActive'],
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['isActive'] == 1;
+    }
+
+    return true; // Default if no record exists
   }
 }

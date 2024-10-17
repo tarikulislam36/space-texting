@@ -48,12 +48,12 @@ class SignupView extends GetView<SignupController> {
               children: [
                 Image.asset(
                   Assets.assetsSignup,
-                  width: 56.w,
+                  width: 50.w,
                 ),
               ],
             ),
             GlossyContainer(
-              height: 63.h,
+              height: 67.h,
               width: 100.w,
               strengthY: 5,
               strengthX: 5,

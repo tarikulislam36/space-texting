@@ -1,12 +1,22 @@
 import 'package:get/get.dart';
+import 'package:space_texting/app/services/dialog_helper.dart';
 import 'package:space_texting/app/services/socket_io_service.dart';
-import 'package:space_texting/app/services/database_helper.dart'; // Import the database helper
+import 'package:space_texting/app/services/database_helper.dart';
+import 'package:space_texting/constants/assets.dart'; // Import the database helper
 
 class ChatController extends GetxController {
   late SocketService socketService;
   var messages = <Map<String, dynamic>>[].obs; // Store messages
   var isConnected = false.obs;
   DatabaseHelper dbHelper = DatabaseHelper(); // Initialize the database helper
+  RxBool isBgActive = true.obs;
+
+  RxInt currentIndex = 0.obs;
+
+  RxList<String> backgroundImages = <String>[
+    Assets.assetsBackground,
+    Assets.assetsBg2,
+  ].obs;
 
   @override
   void onInit() {
@@ -77,12 +87,43 @@ class ChatController extends GetxController {
   Future<void> loadMessagesFromDb(String userId, String targetUserId) async {
     List<Map<String, dynamic>> localMessages =
         await dbHelper.getMessages(userId, targetUserId);
-    messages.addAll(localMessages); // Load into the observable list
+    messages.addAll(localMessages);
+    // Load into the observable list
+    currentIndex.value = messages.value.length - 1;
+
+    print("Current Index : ${currentIndex.value}");
   }
 
   @override
   void onClose() {
     socketService.disconnectSocket();
     super.onClose();
+  }
+
+  RxBool isMoreLoading = false.obs;
+  void goUp() async {
+    isMoreLoading.value = true;
+    DialogHelper.showLoading();
+
+    if (!(currentIndex.value < 4)) {
+      currentIndex.value = currentIndex.value - 2;
+    }
+    await Future.delayed(const Duration(seconds: 1));
+    DialogHelper.hideDialog();
+    isMoreLoading.value = false;
+    print("Current Index : ${currentIndex.value}");
+  }
+
+  void goDown() async {
+    isMoreLoading.value = true;
+    DialogHelper.showLoading();
+
+    if (!(currentIndex.value > messages.length - 4)) {
+      currentIndex.value = currentIndex.value + 2;
+    }
+    await Future.delayed(const Duration(seconds: 1));
+    DialogHelper.hideDialog();
+    isMoreLoading.value = false;
+    print("Current Index : ${currentIndex.value}");
   }
 }

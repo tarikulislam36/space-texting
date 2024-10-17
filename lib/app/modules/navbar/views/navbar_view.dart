@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:space_texting/app/modules/chatScreen/views/chat_screen_view.dart';
-import 'package:space_texting/app/modules/home/views/home_view.dart';
 import 'package:space_texting/app/modules/profileScreen/views/profile_screen_view.dart';
 import '../controllers/navbar_controller.dart';
 
 class NavbarView extends GetView<NavbarController> {
-  const NavbarView({Key? key}) : super(key: key);
+  const NavbarView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,11 +13,9 @@ class NavbarView extends GetView<NavbarController> {
       body: Obx(() {
         switch (controller.selectedIndex.value) {
           case 0:
-            return ChatScreenView();
+            return const ChatScreenView();
           case 1:
-            return HomeView();
-          case 2:
-            return ProfileScreenView();
+            return const ProfileScreenView();
           default:
             return const Center(child: Text('NavbarView is working'));
         }
@@ -64,22 +61,7 @@ class NavbarView extends GetView<NavbarController> {
                 label: 'Chats',
               ),
               const BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined, size: 30),
-                label: 'Home',
-              ),
-              const BottomNavigationBarItem(
-                icon: Stack(
-                  children: [
-                    Icon(Icons.person_outline, size: 30),
-                    Positioned(
-                      right: 0,
-                      child: CircleAvatar(
-                        radius: 5,
-                        backgroundColor: Colors.green,
-                      ),
-                    ),
-                  ],
-                ),
+                icon: Icon(Icons.person_outline, size: 30),
                 label: 'Profile',
               ),
             ],
