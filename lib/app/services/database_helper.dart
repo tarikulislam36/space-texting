@@ -67,6 +67,16 @@ class DatabaseHelper {
     return await db.insert('messages', message);
   }
 
+  Future<int> clearAllMessages(String senderId, String receiverId) async {
+    final db = await database;
+    return await db.delete(
+      'messages',
+      where:
+          '(senderId = ? AND receiverId = ?) OR (senderId = ? AND receiverId = ?)',
+      whereArgs: [senderId, receiverId, receiverId, senderId],
+    );
+  }
+
   // Insert or update chat user
   Future<int> insertOrUpdateChatUser(String userId, String name, String date,
       String time, String lastMessage) async {
@@ -176,5 +186,15 @@ class DatabaseHelper {
     }
 
     return true; // Default if no record exists
+  }
+
+  Future<int> deleteMessage(
+      String messageText, String messageDate, String messageTime) async {
+    final db = await database;
+    return await db.delete(
+      'messages',
+      where: 'message = ? AND date = ? AND time = ?',
+      whereArgs: [messageText, messageDate, messageTime],
+    );
   }
 }

@@ -1,8 +1,11 @@
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:space_texting/app/routes/app_pages.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/constants/assets.dart';
-
 import '../controllers/profile_screen_controller.dart';
 
 class ProfileScreenView extends GetView<ProfileScreenController> {
@@ -24,55 +27,77 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
         ),
         child: Column(
           children: [
-            const SizedBox(height: 50), // Space for top margin
+            SizedBox(height: 10.h), // Space for top margin
             // Profile Picture and Name
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  10.kwidthBox,
-                  const CircleAvatar(
-                    radius: 40,
-                    backgroundImage: NetworkImage(
-                        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE4g-3ZH_1TjfN-zOuCRru2LrfrGtPbwaCsQ&s"),
-                  ),
-                  const SizedBox(width: 16),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Alice Space', // Replace with actual name
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // QR code icon
-                ],
-              ),
+              child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection("users")
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Column(
+                        children: [
+                          10.kwidthBox,
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundImage: snapshot.data!
+                                    .data()!["profilePic"]
+                                    .toString()
+                                    .isEmpty
+                                ? const AssetImage("assets/default_user.jpg")
+                                    as ImageProvider
+                                : NetworkImage(
+                                    snapshot.data!.data()!["profilePic"]),
+                          ),
+                          const SizedBox(height: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                snapshot.data!
+                                        .data()!["name"]
+                                        .toString()
+                                        .isEmpty
+                                    ? snapshot.data!.data()!["phoneNumber"]
+                                    : snapshot.data!
+                                        .data()!["name"]
+                                        .toString(), // Replace with actual name
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          // QR code icon
+                        ],
+                      );
+                    }
+
+                    return const SizedBox();
+                  }),
             ),
-            const SizedBox(height: 20),
+
             // Menu Options
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: ListView(
                   children: [
-                    _buildMenuItem(Icons.account_circle, 'Account',
-                        'Privacy, security, change number'),
-                    _buildMenuItem(
-                        Icons.chat, 'Chat', 'Chat history, theme, wallpapers'),
+                    _buildMenuItem(Icons.account_circle, 'Edit Account',
+                        'Privacy, security, change number', () {
+                      Get.toNamed(Routes.EDIT_PROFILE);
+                    }),
                     _buildMenuItem(Icons.notifications, 'Notifications',
-                        'Messages, group and others'),
-                    _buildMenuItem(Icons.help, 'Help',
-                        'Help center, contact us, privacy policy'),
-                    _buildMenuItem(Icons.storage, 'Storage and data',
-                        'Network usage, storage usage'),
+                        'Manage app notifications', () {
+                      _openNotificationSettings();
+                    }),
                     _buildMenuItem(Icons.person_add, 'Invite a friend',
-                        'invite friend to chat with him'),
+                        'Invite friend to chat with them', () {}),
                   ],
                 ),
               ),
@@ -83,21 +108,37 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, String subtitle) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.white),
-      title: Text(
-        title,
-        style:
-            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+  Widget _buildMenuItem(
+      IconData icon, String title, String subtitle, Function onTap) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: Colors.white,
+          size: 30,
+        ),
+        title: Text(
+          title,
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        onTap: () {
+          onTap();
+        },
       ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: Colors.white.withOpacity(0.7)),
-      ),
-      onTap: () {
-        // Implement navigation or action on tap
+    );
+  }
+
+  // Method to open the notification settings of the app
+  void _openNotificationSettings() async {
+    final intent = AndroidIntent(
+      action: 'android.settings.APP_NOTIFICATION_SETTINGS',
+      arguments: {
+        'android.provider.extra.APP_PACKAGE':
+            'com.your.package.name', // Replace with your package name
       },
     );
+    await intent.launch();
   }
 }

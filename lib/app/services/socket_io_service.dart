@@ -57,12 +57,11 @@ class SocketService {
     }
   }
 
-  void deleteMessage(String senderId, String receiverId, String message,
-      String time, String date) {
+  void deleteMessage(String message, String time, String date) {
     if (socket != null && socket!.connected) {
       socket?.emit('delete_message', {
-        'senderId': senderId,
-        'receiverId': receiverId,
+        'senderId': "",
+        'receiverId': "",
         "message": message,
         "time": time,
         "date": date,

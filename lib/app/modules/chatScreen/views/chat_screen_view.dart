@@ -59,15 +59,15 @@ class ChatCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          subtitle: Text(
-            userMap["lastMessage"].toString().contains("http")
-                ? "Media"
-                : "${userMap["lastMessage"]}", // Update with actual message
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[400],
-            ),
-          ),
+          // subtitle: Text(
+          //   userMap["lastMessage"].toString().contains("http")
+          //       ? "Media"
+          //       : "${userMap["lastMessage"]}", // Update with actual message
+          //   style: TextStyle(
+          //     fontSize: 14,
+          //     color: Colors.grey[400],
+          //   ),
+          // ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,

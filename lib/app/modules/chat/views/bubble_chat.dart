@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:space_texting/app/components/gif_video_player.dart';
+import 'package:space_texting/app/modules/chat/controllers/chat_controller.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
 
 class ChatBubble extends StatefulWidget {
@@ -10,8 +11,9 @@ class ChatBubble extends StatefulWidget {
   final String time;
   final bool hasImage;
   final String type;
-
+  final String date;
   final String senderName;
+  final String receiverId;
 
   const ChatBubble({
     Key? key,
@@ -21,6 +23,8 @@ class ChatBubble extends StatefulWidget {
     this.hasImage = false,
     required this.type,
     required this.senderName,
+    required this.date,
+    required this.receiverId,
   }) : super(key: key);
 
   @override
@@ -249,13 +253,23 @@ class _ChatBubbleState extends State<ChatBubble>
                       Positioned(
                         top: 1,
                         right: 10,
-                        child: Container(
-                          decoration: BoxDecoration(
-                              color: Colors.white, shape: BoxShape.circle),
-                          child: Icon(
-                            Icons.cancel,
-                            color: Colors.red,
-                            size: 30,
+                        child: InkWell(
+                          onTap: () {
+                            Get.find<ChatController>().deleteMessage(
+                                widget.text, widget.date, widget.time);
+                            Get.find<ChatController>()
+                                .socketService
+                                .deleteMessage(
+                                    widget.text, widget.date, widget.time);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.white, shape: BoxShape.circle),
+                            child: Icon(
+                              Icons.cancel,
+                              color: Colors.red,
+                              size: 30,
+                            ),
                           ),
                         ),
                       ),

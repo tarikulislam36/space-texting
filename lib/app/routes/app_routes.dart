@@ -23,6 +23,8 @@ abstract class Routes {
   static const VIEW_PROFILE = _Paths.VIEW_PROFILE;
   static const SELECT_CHAT = _Paths.SELECT_CHAT;
   static const SHOW_IMAGE = _Paths.SHOW_IMAGE;
+  static const EDIT_PROFILE = _Paths.EDIT_PROFILE;
+  static const DATA_USE = _Paths.DATA_USE;
 }
 
 abstract class _Paths {
@@ -47,4 +49,6 @@ abstract class _Paths {
   static const VIEW_PROFILE = '/view-profile';
   static const SELECT_CHAT = '/select-chat';
   static const SHOW_IMAGE = '/show-image';
+  static const EDIT_PROFILE = '/edit-profile';
+  static const DATA_USE = '/data-use';
 }

@@ -33,6 +33,8 @@ dependencies:
   sqflite:
   intl:
   flutter_callkit_incoming: ^2.0.4+2
+  network_usage: ^0.0.4
+  android_intent_plus: ^5.2.0
 
 dev_dependencies: 
   flutter_lints: ^3.0.0

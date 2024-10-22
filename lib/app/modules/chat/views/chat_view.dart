@@ -221,16 +221,17 @@ class _ChatViewState extends State<ChatView> {
         () => GestureDetector(
           onVerticalDragUpdate: (details) {
             if (details.delta.dy < 0) {
+              print("swipe down");
+              if (!chatController.isMoreLoading.value) {
+                chatController.goDown();
+              }
+            } else if (details.delta.dy > 0) {
+              // Swiping down - load next messages
+
               // Swiping up - load previous messages
               print("swip up");
               if (!chatController.isMoreLoading.value) {
                 chatController.goUp();
-              }
-            } else if (details.delta.dy > 0) {
-              // Swiping down - load next messages
-              print("swipe down");
-              if (!chatController.isMoreLoading.value) {
-                chatController.goDown();
               }
             }
           },
@@ -397,6 +398,11 @@ class _ChatViewState extends State<ChatView> {
                                 if (value == 1) {
                                   print('Block User');
                                 } else if (value == 2) {
+                                  chatController.clearChat(
+                                    widget.userId,
+                                    widget.targetUserId,
+                                  );
+                                  Get.back();
                                   print('Clear Chat');
                                 } else if (value == 3) {
                                   if (chatController.isBgActive.value) {
@@ -459,10 +465,10 @@ class _ChatViewState extends State<ChatView> {
                         ),
                         ...chatController.messages
                             .sublist(
-                          chatController.messages.length >= 5
-                              ? chatController.currentIndex.value - 6
-                              : 0,
-                          chatController.currentIndex.value - 1,
+                          (chatController.messages.length >= 5
+                              ? chatController.currentIndex.value - 4
+                              : 0),
+                          chatController.currentIndex.value + 1,
                         )
                             .map(
                           (element) {
@@ -471,6 +477,8 @@ class _ChatViewState extends State<ChatView> {
                               isSender: element['isSender'] ?? 0,
                               text: "${element["message"]}",
                               time: "${element["time"]}",
+                              date: "${element["date"]}",
+                              receiverId: "${element[widget.targetUserId]}",
                               type: element["type"] ??
                                   identifyContentType(element["message"]),
                             );

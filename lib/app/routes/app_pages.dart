@@ -6,6 +6,8 @@ import '../modules/chat/bindings/chat_binding.dart';
 import '../modules/chat/views/chat_view.dart';
 import '../modules/chatScreen/bindings/chat_screen_binding.dart';
 import '../modules/chatScreen/views/chat_screen_view.dart';
+import '../modules/editProfile/bindings/edit_profile_binding.dart';
+import '../modules/editProfile/views/edit_profile_view.dart';
 import '../modules/getStarted/bindings/get_started_binding.dart';
 import '../modules/getStarted/views/get_started_view.dart';
 import '../modules/getUserDetails/bindings/get_user_details_binding.dart';
@@ -143,6 +145,11 @@ class AppPages {
       name: _Paths.SHOW_IMAGE,
       page: () => const ShowImageView(),
       binding: ShowImageBinding(),
+    ),
+    GetPage(
+      name: _Paths.EDIT_PROFILE,
+      page: () => const EditProfileView(),
+      binding: EditProfileBinding(),
     ),
   ];
 }
