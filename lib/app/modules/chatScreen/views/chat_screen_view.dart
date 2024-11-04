@@ -5,8 +5,10 @@ import 'package:get/get.dart';
 import 'package:space_texting/app/modules/chat/views/chat_view.dart';
 import 'package:space_texting/app/modules/selectChat/controllers/select_chat_controller.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
+import 'package:space_texting/app/services/database_helper.dart';
 import 'package:space_texting/app/services/date_format.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
+import 'package:space_texting/app/services/stripe_payment.dart';
 import 'package:space_texting/constants/assets.dart';
 import '../controllers/chat_screen_controller.dart';
 
@@ -40,7 +42,7 @@ class ChatCard extends StatelessWidget {
                     : const AssetImage(Assets.assetsDefaultUser),
                 radius: 25,
               ),
-              if (user.status == "active")
+              if (user.isOnline)
                 const Positioned(
                   bottom: 0,
                   right: 0,
@@ -59,15 +61,15 @@ class ChatCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          // subtitle: Text(
-          //   userMap["lastMessage"].toString().contains("http")
-          //       ? "Media"
-          //       : "${userMap["lastMessage"]}", // Update with actual message
-          //   style: TextStyle(
-          //     fontSize: 14,
-          //     color: Colors.grey[400],
-          //   ),
-          // ),
+          subtitle: Text(
+            userMap["lastMessage"].toString().contains("http")
+                ? "Media"
+                : "${userMap["lastMessage"]}", // Update with actual message
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[400],
+            ),
+          ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -112,10 +114,40 @@ class ChatScreenView extends GetView<ChatScreenController> {
 
   @override
   Widget build(BuildContext context) {
+    DatabaseHelper db = DatabaseHelper();
+    Future<void> insertMessage(Map<String, dynamic> message) async {
+      await db.insertMessage(message);
+    }
+
+    Future<void> insertChatUser(Map<String, dynamic> data) async {
+      print({
+        data["senderId"],
+        data["receverName"],
+        data["date"],
+        data["time"],
+        data["message"]
+      });
+      await db.insertOrUpdateChatUser(data["senderId"], data["receverName"],
+          data["date"], data["time"], data["message"]);
+    }
+
+    controller.getChatUsers();
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Get.toNamed(Routes.SELECT_CHAT);
+        onPressed: () async {
+          await FirebaseFirestore.instance
+              .collection("users")
+              .doc(FirebaseAuth.instance.currentUser!.uid)
+              .get()
+              .then((value) {
+            if (value.exists &&
+                value.data()!["membership"] != null &&
+                isWithinLastTwoMonths(value.data()!["membership"])) {
+              Get.toNamed(Routes.SELECT_CHAT);
+            } else {
+              Get.snackbar("Membership", "Membership is not activated");
+            }
+          });
         },
         child: Container(
           height: 60,
@@ -148,25 +180,76 @@ class ChatScreenView extends GetView<ChatScreenController> {
               ? const Center(
                   child: CircularProgressIndicator(),
                 )
-              : ListView(
-                  physics: const BouncingScrollPhysics(),
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(
-                        child: Text(
-                          "Chats",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w600,
+              : StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection("users")
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .collection("unreadMessages")
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      List<QueryDocumentSnapshot<Map<String, dynamic>>> docs =
+                          snapshot.data!.docs;
+                      for (int i = 0; i < docs.length; i++) {
+                        if (docs[i].data()["status"] == "pending") {
+                          print(docs[i].data());
+                          Map<String, dynamic> messageData = docs[i].data();
+                          Map<String, dynamic> newMessage = {
+                            'senderId': messageData["senderId"],
+                            'receiverId': messageData["receiverId"],
+                            'message': messageData["message"],
+                            'isSender': 0,
+                            'type': messageData["type"],
+                            'time': messageData["time"],
+                            'date': messageData["date"],
+                          };
+
+                          // Insert the message
+                          insertMessage(newMessage);
+                          insertChatUser(newMessage);
+                          // Update the status to "seen"
+                          docs[i]
+                              .reference
+                              .update({"status": "seen"}).then((_) {
+                            print(
+                                "Document ${docs[i].id} status updated to seen.");
+                          }).catchError((error) {
+                            print("Failed to update document status: $error");
+                          });
+                        }
+                      }
+
+                      return ListView(
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: Center(
+                              child: Text(
+                                "Chats",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                    ...controller.allChats.map((e) => ChatCard(userMap: e)),
-                  ],
-                ),
+                          if (controller.allChats.isEmpty)
+                            const Center(
+                              child: Text(
+                                "No Chat Yet!",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 20),
+                              ),
+                            ),
+                          ...controller.allChats
+                              .map((e) => ChatCard(userMap: e)),
+                        ],
+                      );
+                    }
+                    return Text("Error");
+                  }),
         ),
       ),
     );

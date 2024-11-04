@@ -1,10 +1,31 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const stripe = require("stripe")("sk_test_51QBJgjJ3Ccccrszu8Wv6WO6kfcoK7qPUAS8mhENATsTnqqsJz6NOPnbO1VZP7kYe0ESfmG6y9kX8bOiolMtqMG5e00Xz8oI4x7"); // Securely stored here
 
 admin.initializeApp();
 
 const firestore = admin.firestore();
 
+
+
+
+
+exports.createPaymentIntent = functions.https.onRequest(async (req, res) => {
+  try {
+    const { amount, currency } = req.body;
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: currency,
+    });
+
+    res.status(200).send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    res.status(400).send({ error: error.message });
+  }
+});
 
 exports.sendCallNotification = functions.firestore
     .document('rooms/{callId}')

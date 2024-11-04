@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
+import 'package:space_texting/app/services/date_format.dart';
 import 'package:space_texting/app/services/endpoints.dart'; // Import the http package
 
 class SelectChatController extends GetxController {
@@ -199,6 +200,7 @@ class UserHome {
   final String notificationToken;
   final Timestamp createdAt;
   final String uid;
+  final bool isOnline;
 
   UserHome({
     required this.id,
@@ -209,6 +211,7 @@ class UserHome {
     required this.notificationToken,
     required this.createdAt,
     required this.uid,
+    required this.isOnline,
   });
 
   factory UserHome.fromJson(Map<String, dynamic> json) {
@@ -221,7 +224,10 @@ class UserHome {
       notificationToken:
           json['notificationToken'] ?? '', // Default to empty string if null
       createdAt: json['createdAt'],
-
+      isOnline: json["isOnline"] &&
+              isRecentlyActive((json["lastSeen"] as Timestamp).toDate())
+          ? true
+          : false,
       uid: json['uid'] ?? "", // Default to current date if null
     );
   }

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
+import 'package:space_texting/app/services/database_helper.dart';
 
 class SplashController extends GetxController {
   //TODO: Implement SplashController
@@ -9,6 +10,7 @@ class SplashController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    DatabaseHelper db = DatabaseHelper();
     Future.delayed(
       const Duration(seconds: 1),
       () {

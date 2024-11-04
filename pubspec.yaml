@@ -1,5 +1,5 @@
 name: space_texting
-version: 1.0.0+1
+version: 1.0.2+2
 publish_to: none
 description: A new Flutter project.
 environment: 
@@ -35,6 +35,8 @@ dependencies:
   flutter_callkit_incoming: ^2.0.4+2
   network_usage: ^0.0.4
   android_intent_plus: ^5.2.0
+  flutter_dotenv: ^5.2.1
+  flutter_stripe: ^11.2.0
 
 dev_dependencies: 
   flutter_lints: ^3.0.0

@@ -89,8 +89,8 @@ class EditProfileController extends GetxController {
       // Update local state
       name.value = newName;
       if (imageUrl != null) profilePicUrl.value = imageUrl;
-
-      Get.snackbar("Success", "Profile updated successfully!");
+      DialogHelper.hideDialog();
+      // Get.snackbar("Success", "Profile updated successfully!");
       Get.back();
     } catch (e) {
       Get.snackbar("Error", "Failed to update profile");

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,11 @@ import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 import 'package:flutter_callkit_incoming/entities/notification_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 import 'package:get/get.dart';
+import 'package:space_texting/app/services/is_online_helper.dart';
 import 'package:space_texting/firebase_options.dart';
 
 import 'app/routes/app_pages.dart';
@@ -100,8 +104,76 @@ void main() async {
     yourCustomFunction();
   });
 
-  runApp(
-    GetMaterialApp(
+  //Assign publishable key to flutter_stripe
+  Stripe.publishableKey =
+      "pk_test_51QBJgjJ3CcccrszuT9iSEmrXbBpd25voJRxasczpLfvJXiXb4fRsASzdMvkWQEJW0g8q3aNdZYDVmpCPxIqOgyPE00O8J0bHVe";
+
+  //Load our .env file that contains our Stripe Secret key
+  await dotenv.load(fileName: "assets/.env");
+
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final LifecycleEventHandler _lifecycleEventHandler;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize the LifecycleEventHandler
+    _lifecycleEventHandler = LifecycleEventHandler(
+      resumeCallBack: _setOnlineStatus,
+      suspendingCallBack: _setOfflineStatus,
+    );
+
+    // Add the LifecycleEventHandler as an observer
+    WidgetsBinding.instance.addObserver(_lifecycleEventHandler);
+  }
+
+  // Define functions to update online status
+  Future<void> _setOnlineStatus() async {
+    print("Online status called");
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('users').doc(user.uid).update({
+        'isOnline': true,
+        'lastSeen': FieldValue.serverTimestamp(),
+      });
+      print("Online ");
+    }
+  }
+
+  Future<void> _setOfflineStatus() async {
+    print("Offline status called");
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('users').doc(user.uid).update({
+        'isOnline': false,
+        'lastSeen': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    // Remove the LifecycleEventHandler as an observer
+    WidgetsBinding.instance.removeObserver(_lifecycleEventHandler);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
       theme: ThemeData(scaffoldBackgroundColor: Colors.black),
       debugShowCheckedModeBanner: false,
       title: "Application",
@@ -109,6 +181,6 @@ void main() async {
           ? Routes.NAVBAR
           : AppPages.INITIAL,
       getPages: AppPages.routes,
-    ),
-  );
+    );
+  }
 }

@@ -16,13 +16,6 @@ class ChatScreenController extends GetxController {
     _startChatUserRefresh();
   }
 
-  @override
-  void onClose() {
-    // Cancel the timer when the controller is closed
-    _timer?.cancel();
-    super.onClose();
-  }
-
   void increment() => count.value++;
 
   // Get the list of users you have chatted with

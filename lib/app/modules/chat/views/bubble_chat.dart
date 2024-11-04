@@ -160,12 +160,12 @@ class _ChatBubbleState extends State<ChatBubble>
                   children: [
                     Container(
                       width: widget.type == "gif"
-                          ? 150
+                          ? 190
                           : widget.text.length > 40
                               ? 200
                               : 120,
                       height: widget.type == "gif"
-                          ? 150
+                          ? 190
                           : widget.text.length > 40
                               ? 200
                               : 120,

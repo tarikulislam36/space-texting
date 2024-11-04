@@ -47,10 +47,13 @@ class ChatController extends GetxController {
     // Listen for incoming messages
     socketService.socket?.on('receive_message', (data) async {
       print("data get ${data}");
-      messages.add(data); // Add the received message to the list
-
+      messages.value.add(data); // Add the received message to the list
+      currentIndex.value = 5;
       // Save message to the local database
       await dbHelper.insertMessage(data);
+      await dbHelper.insertOrUpdateChatUser(data["senderId"],
+          data["receverName"], data["date"], data["time"], data["message"]);
+      print("data added");
     });
 
     // Listen for incoming messages

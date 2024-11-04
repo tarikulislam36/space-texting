@@ -64,6 +64,7 @@ class DatabaseHelper {
   // Insert message
   Future<int> insertMessage(Map<String, dynamic> message) async {
     final db = await database;
+    print("insert meaase");
     return await db.insert('messages', message);
   }
 
@@ -81,7 +82,7 @@ class DatabaseHelper {
   Future<int> insertOrUpdateChatUser(String userId, String name, String date,
       String time, String lastMessage) async {
     final db = await database;
-
+    print("insert user chat called");
     // Use conflict algorithm to update the record if it already exists
     return await db.insert(
         'chat_users',
@@ -196,5 +197,15 @@ class DatabaseHelper {
       where: 'message = ? AND date = ? AND time = ?',
       whereArgs: [messageText, messageDate, messageTime],
     );
+  }
+
+  // Clear all data from every table
+  Future<void> clearAllData() async {
+    final db = await database;
+
+    // Delete all rows from each table
+    await db.delete('messages');
+    await db.delete('chat_users');
+    await db.delete('chat_bg');
   }
 }

@@ -3,8 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:space_texting/app/routes/app_pages.dart';
+import 'package:space_texting/app/services/database_helper.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
+import 'package:space_texting/app/services/stripe_payment.dart';
 import 'package:space_texting/constants/assets.dart';
 import '../controllers/profile_screen_controller.dart';
 
@@ -13,6 +16,7 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
 
   @override
   Widget build(BuildContext context) {
+    DatabaseHelper dbHelper = DatabaseHelper();
     return Scaffold(
       body: Container(
         height: 100.h,
@@ -54,7 +58,7 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
                           ),
                           const SizedBox(height: 16),
                           Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
                                 snapshot.data!
@@ -68,6 +72,19 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                snapshot.data!
+                                        .data()!["name"]
+                                        .toString()
+                                        .isNotEmpty
+                                    ? snapshot.data!.data()!["phoneNumber"]
+                                    : "", // Replace with actual name
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -96,8 +113,76 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
                         'Manage app notifications', () {
                       _openNotificationSettings();
                     }),
+                    _buildMenuItem(Icons.card_membership_rounded, 'Membership',
+                        'Manage app notifications', () {
+                      _showConfirmationDialog(
+                        context,
+                        'Membership',
+                        'Membership will cost you \$14/2 months',
+                        () async {
+                          print("click");
+                          StripePaymentService().processPayment("10", "USD");
+                        },
+                      );
+                    }),
                     _buildMenuItem(Icons.person_add, 'Invite a friend',
-                        'Invite friend to chat with them', () {}),
+                        'Invite friend to chat with them', () {
+                      Share.share(
+                          'Checkout my app space texting and calling use the link to download : https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+                    }),
+                    _buildMenuItem(Icons.logout, 'Logout',
+                        'Invite friend to chat with them', () {
+                      _showConfirmationDialog(
+                        context,
+                        'Logout',
+                        'Are you sure you want to log out? All local data will be lost.',
+                        () async {
+                          // Sign out from Firebase
+                          await FirebaseAuth.instance.signOut();
+
+                          // Navigate to the login screen or landing page if necessary
+                          dbHelper.clearAllData();
+                          Get.offAllNamed(Routes.SIGNUP);
+                        },
+                      );
+                    }),
+                    _buildMenuItem(Icons.delete, 'Delete Account',
+                        'Invite friend to chat with them', () {
+                      _showConfirmationDialog(
+                        context,
+                        'Delete Account',
+                        'Are you sure you want to delete your account? This action cannot be undone, and all data will be permanently lost.',
+                        () async {
+                          try {
+                            // Clear local data
+                            await dbHelper.clearAllData();
+
+                            // Delete the Firebase user account
+                            await FirebaseAuth.instance.currentUser?.delete();
+
+                            // Optionally, navigate to the login or sign-up screen
+                            Get.offAllNamed(Routes.SPLASH);
+                          } catch (e) {
+                            if (e is FirebaseAuthException &&
+                                e.code == 'requires-recent-login') {
+                              // If reauthentication is needed
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Please reauthenticate to delete your account.')),
+                              );
+                            } else {
+                              // Handle other errors
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Failed to delete account: ${e.toString()}')),
+                              );
+                            }
+                          }
+                        },
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -105,6 +190,41 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showConfirmationDialog(BuildContext context, String title,
+      String message, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.deepPurple,
+          title: Text(title),
+          content: Text(message),
+          titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18),
+          contentTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(), // Close the dialog
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                onConfirm(); // Proceed with the action
+              },
+              child: const Text(
+                'Confirm',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -132,11 +252,11 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
 
   // Method to open the notification settings of the app
   void _openNotificationSettings() async {
-    final intent = AndroidIntent(
+    final intent = const AndroidIntent(
       action: 'android.settings.APP_NOTIFICATION_SETTINGS',
       arguments: {
         'android.provider.extra.APP_PACKAGE':
-            'com.your.package.name', // Replace with your package name
+            'com.joy.space_texting', // Replace with your package name
       },
     );
     await intent.launch();

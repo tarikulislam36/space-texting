@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -283,47 +284,79 @@ class _ChatViewState extends State<ChatView> {
                                 Get.back();
                               },
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                Get.toNamed(Routes.VIEW_PROFILE);
-                              },
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundImage: widget.profileImage.isEmpty
-                                        ? const AssetImage(
-                                            "assets/default_user.jpg")
-                                        : NetworkImage(widget.profileImage)
-                                            as ImageProvider<Object>,
-                                    radius: 24,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        widget.name,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
+                            StreamBuilder(
+                                stream: FirebaseFirestore.instance
+                                    .collection("users")
+                                    .doc(widget.targetUserId)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Get.toNamed(Routes.VIEW_PROFILE);
+                                    },
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundImage:
+                                              widget.profileImage.isEmpty
+                                                  ? const AssetImage(
+                                                      "assets/default_user.jpg")
+                                                  : NetworkImage(
+                                                          widget.profileImage)
+                                                      as ImageProvider<Object>,
+                                          radius: 24,
                                         ),
-                                      ),
-                                      Text(
-                                        widget.isOnline ? 'Online' : 'Offline',
-                                        style: TextStyle(
-                                          color: widget.isOnline
-                                              ? Colors.greenAccent
-                                              : Colors.grey[300],
-                                          fontSize: 14,
+                                        const SizedBox(width: 10),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              widget.name,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            if (snapshot.hasData)
+                                              Text(
+                                                snapshot.data!.data()![
+                                                            "isOnline"] &&
+                                                        isRecentlyActive((snapshot
+                                                                        .data!
+                                                                        .data()![
+                                                                    "lastSeen"]
+                                                                as Timestamp)
+                                                            .toDate())
+                                                    ? 'Online'
+                                                    : isRecentlyActive((snapshot
+                                                                        .data!
+                                                                        .data()![
+                                                                    "lastSeen"]
+                                                                as Timestamp)
+                                                            .toDate())
+                                                        ? 'Last seen recently'
+                                                        : formatDateTime((snapshot
+                                                                        .data!
+                                                                        .data()![
+                                                                    "lastSeen"]
+                                                                as Timestamp)
+                                                            .toDate()),
+                                                style: TextStyle(
+                                                  color: snapshot.data!
+                                                          .data()!["isOnline"]
+                                                      ? Colors.greenAccent
+                                                      : Colors.grey[300],
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                                      ],
+                                    ),
+                                  );
+                                }),
                             const Spacer(),
                             InkWell(
                                 onTap: () async {
@@ -458,17 +491,16 @@ class _ChatViewState extends State<ChatView> {
                                   ? getFormattedDate(chatController
                                       .messages.value.last["date"])
                                   : "Today",
-                              style: TextStyle(
+                              style: const TextStyle(
                                   color: Colors.white54, fontSize: 14),
                             ),
                           ),
                         ),
                         ...chatController.messages
                             .sublist(
-                          (chatController.messages.length >= 5
-                              ? chatController.currentIndex.value - 4
-                              : 0),
-                          chatController.currentIndex.value + 1,
+                          chatController.messages.length < 5
+                              ? 0
+                              : chatController.messages.length - 5,
                         )
                             .map(
                           (element) {
