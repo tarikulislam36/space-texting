@@ -9,6 +9,7 @@ import 'package:space_texting/app/services/database_helper.dart';
 import 'package:space_texting/app/services/responsive_size.dart';
 import 'package:space_texting/app/services/stripe_payment.dart';
 import 'package:space_texting/constants/assets.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../controllers/profile_screen_controller.dart';
 
 class ProfileScreenView extends GetView<ProfileScreenController> {
@@ -31,7 +32,7 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
         ),
         child: Column(
           children: [
-            SizedBox(height: 10.h), // Space for top margin
+            SizedBox(height: 5.h), // Space for top margin
             // Profile Picture and Name
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -130,6 +131,11 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
                       Share.share(
                           'Checkout my app space texting and calling use the link to download : https://www.youtube.com/watch?v=dQw4w9WgXcQ');
                     }),
+                    _buildMenuItem(Icons.privacy_tip, 'Privacy Policy',
+                        'Manage app notifications', () async {
+                      await launchUrl(
+                          Uri.parse("https://spacetexting.com/policy"));
+                    }),
                     _buildMenuItem(Icons.logout, 'Logout',
                         'Invite friend to chat with them', () {
                       _showConfirmationDialog(
@@ -167,7 +173,7 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
                                 e.code == 'requires-recent-login') {
                               // If reauthentication is needed
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
+                                const SnackBar(
                                     content: Text(
                                         'Please reauthenticate to delete your account.')),
                               );
@@ -252,7 +258,7 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
 
   // Method to open the notification settings of the app
   void _openNotificationSettings() async {
-    final intent = const AndroidIntent(
+    const intent = AndroidIntent(
       action: 'android.settings.APP_NOTIFICATION_SETTINGS',
       arguments: {
         'android.provider.extra.APP_PACKAGE':

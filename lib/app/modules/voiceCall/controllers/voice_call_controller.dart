@@ -2,34 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:get/get.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:get/get.dart';
 
 class VoiceCallController extends GetxController {
-  //TODO: Implement VoiceCallController
-
-  var showingControls = true.obs; // Reactive boolean for control visibility
-  Timer? _hideControlsTimer;
-
-  // Function to show controls and start the timer to hide them
-  void showControls() {
-    showingControls.value = true;
-
-    // Cancel any previous timer and start a new one
-    _hideControlsTimer?.cancel();
-    _hideControlsTimer = Timer(const Duration(seconds: 1), () {
-      showingControls.value = false;
-    });
-  }
-
-  @override
-  void onClose() {
-    _hideControlsTimer
-        ?.cancel(); // Cancel the timer when the controller is destroyed
-    super.onClose();
-  }
-
   final localVideoRenderer = webrtc.RTCVideoRenderer();
   final remoteVideoRenderer = webrtc.RTCVideoRenderer();
   RxBool isLoading = true.obs;
@@ -73,9 +50,7 @@ class VoiceCallController extends GetxController {
     } else {
       await joinRoom(callId, remoteVideoRenderer);
     }
-    // listenForHangUp();
-    webrtc.Helper.setSpeakerphoneOn(
-        isSpeakerEnabled.value); // Listen for hang up changes
+    listenForHangUp(); // Listen for hang up changes
     isLoading.value = false;
   }
 
@@ -86,7 +61,7 @@ class VoiceCallController extends GetxController {
 
   Future<String> createRoom(RTCVideoRenderer remoteRenderer) async {
     FirebaseFirestore db = FirebaseFirestore.instance;
-    DocumentReference roomRef = db.collection('rooms').doc();
+    DocumentReference roomRef = db.collection('voiceRooms').doc();
 
     print('Create PeerConnection with configuration: $configuration');
 
@@ -170,20 +145,10 @@ class VoiceCallController extends GetxController {
     return roomId;
   }
 
-  void toggleCamera() {
-    // Get the first video track from the local stream
-    var videoTrack = localStream?.getVideoTracks().first;
-
-    if (videoTrack != null) {
-      // Toggle the enabled property of the video track
-      videoTrack.enabled = !videoTrack.enabled;
-    }
-  }
-
   Future<void> joinRoom(String roomId, RTCVideoRenderer remoteVideo) async {
     FirebaseFirestore db = FirebaseFirestore.instance;
     print(roomId);
-    DocumentReference roomRef = db.collection('rooms').doc('$roomId');
+    DocumentReference roomRef = db.collection('voiceRooms').doc('$roomId');
     var roomSnapshot = await roomRef.get();
     print('Got room ${roomSnapshot.exists}');
 
@@ -282,7 +247,7 @@ class VoiceCallController extends GetxController {
 
     if (callId != null) {
       var db = FirebaseFirestore.instance;
-      var roomRef = db.collection('rooms').doc(callId);
+      var roomRef = db.collection('voiceRooms').doc(callId);
 
       await roomRef.update({'hangUped': true}); // Update hangUped field
 
@@ -298,12 +263,11 @@ class VoiceCallController extends GetxController {
     localStream!.dispose();
     remoteStream?.dispose();
     stopCallTimer();
-    Get.back();
   }
 
   void listenForHangUp() {
     FirebaseFirestore.instance
-        .collection('rooms')
+        .collection('voiceRooms')
         .doc(callId)
         .snapshots()
         .listen((snapshot) {
@@ -367,13 +331,5 @@ class VoiceCallController extends GetxController {
     _timer = null;
     _seconds = 0;
     callDuration.value = '00:00';
-  }
-
-  // New function to rotate the camera
-  Future<void> rotateCamera() async {
-    if (localStream != null) {
-      final videoTrack = localStream!.getVideoTracks().first;
-      await webrtc.Helper.switchCamera(videoTrack);
-    }
   }
 }

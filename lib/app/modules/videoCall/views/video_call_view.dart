@@ -84,12 +84,19 @@ class VideoCallView extends GetView<VideoCallController> {
                                     ),
                                     // Video button
                                     CircleAvatar(
-                                      backgroundColor: Colors.black54,
+                                      backgroundColor:
+                                          !controller.isCameraOn.value
+                                              ? Colors.amber
+                                              : Colors.black54,
                                       child: IconButton(
-                                        icon: Icon(Icons.videocam,
+                                        icon: Icon(
+                                            !controller.isCameraOn.value
+                                                ? Icons.videocam_off_rounded
+                                                : Icons.videocam,
                                             color: Colors.white),
                                         onPressed: () {
                                           // Implement video toggle functionality
+                                          controller.toggleCamera();
                                         },
                                       ),
                                     ),
@@ -114,6 +121,8 @@ class VideoCallView extends GetView<VideoCallController> {
                                             color: Colors.white),
                                         onPressed: () {
                                           // Implement end call functionality
+                                          controller.hangUp(
+                                              controller.localVideoRenderer);
                                         },
                                       ),
                                     ),

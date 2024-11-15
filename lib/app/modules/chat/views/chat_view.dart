@@ -69,17 +69,6 @@ class _ChatViewState extends State<ChatView> {
                   },
                 ),
               ),
-              InkWell(
-                onTap: () {},
-                child: ListTile(
-                  leading: const Icon(Icons.location_on, color: Colors.white),
-                  title: const Text('Location',
-                      style: TextStyle(color: Colors.white)),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ),
             ],
           ),
         );
@@ -292,7 +281,10 @@ class _ChatViewState extends State<ChatView> {
                                 builder: (context, snapshot) {
                                   return GestureDetector(
                                     onTap: () {
-                                      Get.toNamed(Routes.VIEW_PROFILE);
+                                      Get.toNamed(Routes.VIEW_PROFILE,
+                                          arguments: {
+                                            "targetUserId": widget.targetUserId
+                                          });
                                     },
                                     child: Row(
                                       children: [
@@ -315,7 +307,7 @@ class _ChatViewState extends State<ChatView> {
                                               widget.name,
                                               style: const TextStyle(
                                                 color: Colors.white,
-                                                fontSize: 18,
+                                                fontSize: 16,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
@@ -386,18 +378,6 @@ class _ChatViewState extends State<ChatView> {
                               color: const Color.fromARGB(255, 44, 40, 40)
                                   .withOpacity(0.8),
                               itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 1,
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.block, color: Colors.white),
-                                      SizedBox(width: 10),
-                                      Text('Block User',
-                                          style:
-                                              TextStyle(color: Colors.white)),
-                                    ],
-                                  ),
-                                ),
                                 const PopupMenuItem(
                                   value: 2,
                                   child: Row(
@@ -498,10 +478,12 @@ class _ChatViewState extends State<ChatView> {
                         ),
                         ...chatController.messages
                             .sublist(
-                          chatController.messages.length < 5
-                              ? 0
-                              : chatController.messages.length - 5,
-                        )
+                                chatController.messages.length < 5
+                                    ? 0
+                                    : chatController.messages.length -
+                                        (chatController.currentIndex.value + 5),
+                                chatController.messages.length -
+                                    chatController.currentIndex.value)
                             .map(
                           (element) {
                             return ChatBubble(

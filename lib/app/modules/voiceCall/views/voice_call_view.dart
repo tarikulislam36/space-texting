@@ -116,6 +116,7 @@ class VoiceCallView extends GetView<VoiceCallController> {
                           icon: Icon(Icons.call_end, color: Colors.white),
                           onPressed: () {
                             // Implement end call functionality
+                            controller.hangUp(controller.localVideoRenderer);
                           },
                         ),
                       ),

@@ -128,7 +128,7 @@ class _ChatBubbleState extends State<ChatBubble>
 
   // Function to handle long press release event
   void _onLongPressEnd() {
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 0), () {
       setState(() {
         showDeleteIcon = false; // Hide the delete icon after 3 seconds
         _controller.forward(); // Resume the animation
@@ -149,7 +149,7 @@ class _ChatBubbleState extends State<ChatBubble>
           top: _bubblePosition.dy,
           child: GestureDetector(
             onLongPress: _onLongPress,
-            onLongPressEnd: (details) => _onLongPressEnd(),
+            onDoubleTap: () => _onLongPressEnd(),
             child: Column(
               crossAxisAlignment: widget.isSender == 1
                   ? CrossAxisAlignment.start

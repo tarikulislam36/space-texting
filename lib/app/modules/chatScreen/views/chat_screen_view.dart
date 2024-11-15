@@ -54,7 +54,7 @@ class ChatCard extends StatelessWidget {
             ],
           ),
           title: Text(
-            "${userMap["name"]}",
+            "${user.name.isEmpty ? user.phoneNumber : user.name}",
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -94,13 +94,26 @@ class ChatCard extends StatelessWidget {
           ),
           contentPadding:
               const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-          onTap: () {
+          onTap: () async {
             // Navigate to ChatView and pass necessary data
-            Get.to(ChatView(
-                name: userMap["name"],
-                profileImage: user.profilePic,
-                targetUserId: user.uid,
-                userId: FirebaseAuth.instance.currentUser!.uid));
+
+            await FirebaseFirestore.instance
+                .collection("users")
+                .doc(FirebaseAuth.instance.currentUser!.uid)
+                .get()
+                .then((value) {
+              if (value.exists &&
+                  value.data()!["membership"] != null &&
+                  isWithinLastTwoMonths(value.data()!["membership"])) {
+                Get.to(ChatView(
+                    name: "${user.name.isEmpty ? user.phoneNumber : user.name}",
+                    profileImage: user.profilePic,
+                    targetUserId: user.uid,
+                    userId: FirebaseAuth.instance.currentUser!.uid));
+              } else {
+                Get.snackbar("Membership", "Membership is not activated");
+              }
+            });
           },
         );
       },
@@ -127,8 +140,8 @@ class ChatScreenView extends GetView<ChatScreenController> {
         data["time"],
         data["message"]
       });
-      await db.insertOrUpdateChatUser(data["senderId"], data["receverName"],
-          data["date"], data["time"], data["message"]);
+      await db.insertOrUpdateChatUser(
+          data["senderId"], "", data["date"], data["time"], data["message"]);
     }
 
     controller.getChatUsers();
@@ -145,7 +158,11 @@ class ChatScreenView extends GetView<ChatScreenController> {
                 isWithinLastTwoMonths(value.data()!["membership"])) {
               Get.toNamed(Routes.SELECT_CHAT);
             } else {
-              Get.snackbar("Membership", "Membership is not activated");
+              Get.snackbar(
+                "Membership",
+                "Membership is not activated",
+                colorText: Colors.white,
+              );
             }
           });
         },

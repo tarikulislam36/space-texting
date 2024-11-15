@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:get/get_rx/get_rx.dart';
 
 class VideoCallController extends GetxController {
   var showingControls = true.obs; // Reactive boolean for control visibility
@@ -71,7 +72,7 @@ class VideoCallController extends GetxController {
     } else {
       await joinRoom(callId, remoteVideoRenderer);
     }
-    // listenForHangUp();
+    listenForHangUp();
     webrtc.Helper.setSpeakerphoneOn(
         isSpeakerEnabled.value); // Listen for hang up changes
     isLoading.value = false;
@@ -168,6 +169,7 @@ class VideoCallController extends GetxController {
     return roomId;
   }
 
+  RxBool isCameraOn = true.obs;
   void toggleCamera() {
     // Get the first video track from the local stream
     var videoTrack = localStream?.getVideoTracks().first;
@@ -175,6 +177,7 @@ class VideoCallController extends GetxController {
     if (videoTrack != null) {
       // Toggle the enabled property of the video track
       videoTrack.enabled = !videoTrack.enabled;
+      isCameraOn.value = !isCameraOn.value;
     }
   }
 
@@ -296,9 +299,10 @@ class VideoCallController extends GetxController {
     localStream!.dispose();
     remoteStream?.dispose();
     stopCallTimer();
-    Get.back();
+    isBacked.value = true;
   }
 
+  RxBool isBacked = false.obs;
   void listenForHangUp() {
     FirebaseFirestore.instance
         .collection('rooms')
@@ -306,7 +310,10 @@ class VideoCallController extends GetxController {
         .snapshots()
         .listen((snapshot) {
       if (snapshot.exists && snapshot.data()!['hangUped'] == true) {
-        Get.back();
+        if (!isBacked.value) {
+          print("Listener Called ${isBacked.value}");
+          Get.back();
+        }
       }
     });
   }

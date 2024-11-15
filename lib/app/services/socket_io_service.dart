@@ -1,9 +1,21 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
+  static final SocketService _instance = SocketService._internal();
   IO.Socket? socket;
 
+  factory SocketService() {
+    return _instance;
+  }
+
+  SocketService._internal();
+
   void connectSocket(String userId, String targetUserId) {
+    if (socket != null && socket!.connected) {
+      print("Socket already connected");
+      return;
+    }
+
     try {
       socket = IO.io('http://82.180.139.1:3000', <String, dynamic>{
         'transports': ['websocket'],
@@ -20,13 +32,11 @@ class SocketService {
       // Listen for messages
       socket?.on('receive_message', (data) {
         print('Message received: $data');
-        // Handle the incoming message (update the chat UI)
       });
 
       // Listen for message deletions
       socket?.on('message_deleted', (data) {
         print('Message deleted: $data');
-        // Remove the message from the chat UI
       });
 
       socket?.onDisconnect((_) {
@@ -72,7 +82,12 @@ class SocketService {
   }
 
   void disconnectSocket() {
-    socket?.disconnect();
+    if (socket != null && socket!.connected) {
+      socket?.disconnect();
+      socket =
+          null; // Reset socket to ensure a new connection when reconnecting
+      print("Socket disconnected and reset");
+    }
   }
 }
 
