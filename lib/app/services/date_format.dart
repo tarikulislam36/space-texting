@@ -57,5 +57,5 @@ bool isWithinLastTwoMonths(Timestamp timestamp) {
       (currentDate.month - givenDate.month);
 
   // Check if the given date is within the last 2 months
-  return monthDifference <= 2;
+  return monthDifference <= 1;
 }

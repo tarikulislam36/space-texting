@@ -142,6 +142,13 @@ class _ChatBubbleState extends State<ChatBubble>
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height - 180;
 
+    // Check if the message contains only emojis
+    bool isEmojiOnly = widget.type == "message" &&
+        RegExp(
+          r"^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F170}-\u{1F251}]+$",
+          unicode: true,
+        ).hasMatch(widget.text);
+
     return Stack(
       children: [
         Positioned(
@@ -159,92 +166,109 @@ class _ChatBubbleState extends State<ChatBubble>
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      width: widget.type == "gif"
-                          ? 190
-                          : widget.text.length > 40
-                              ? 200
-                              : 120,
-                      height: widget.type == "gif"
-                          ? 190
-                          : widget.text.length > 40
-                              ? 200
-                              : 120,
-                      decoration: widget.type == "message"
-                          ? BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  Colors.white70,
-                                  bubbleColor,
-                                ],
-                                center: Alignment.center,
-                                radius: 0.8,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  offset: const Offset(4, 4),
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            )
-                          : null,
+                      width: isEmojiOnly
+                          ? 240
+                          : widget.type == "gif"
+                              ? 190
+                              : widget.text.length > 40
+                                  ? 200
+                                  : 120,
+                      height: isEmojiOnly
+                          ? 240
+                          : widget.type == "gif"
+                              ? 190
+                              : widget.text.length > 40
+                                  ? 200
+                                  : 120,
+                      decoration: isEmojiOnly
+                          ? null // No gradient for emoji-only messages
+                          : widget.type == "message"
+                              ? BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      Colors.white70,
+                                      bubbleColor,
+                                    ],
+                                    center: Alignment.center,
+                                    radius: 0.8,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      offset: const Offset(4, 4),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                )
+                              : null,
                       child: Center(
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: widget.type == "gif"
-                              ? Padding(
-                                  padding: const EdgeInsets.all(2.0),
-                                  child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: GifVideoPlayer(
-                                          videoUrl: widget.text)),
+                          child: isEmojiOnly
+                              ? Text(
+                                  widget.text.runes.length > 1
+                                      ? String.fromCharCode(
+                                          widget.text.runes.first)
+                                      : widget.text,
+                                  style: const TextStyle(
+                                    fontSize: 114, // Large text size for emojis
+                                  ),
                                 )
-                              : widget.type == "photo"
-                                  ? InkWell(
-                                      onTap: () {
-                                        Get.toNamed(Routes.SHOW_IMAGE,
-                                            arguments: {
-                                              "img": widget.text,
-                                            });
-                                      },
-                                      child: Image.network(
-                                        widget.text,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                const Icon(Icons.error),
-                                      ),
+                              : widget.type == "gif"
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          child: GifVideoPlayer(
+                                              videoUrl: widget.text)),
                                     )
-                                  : widget.type == "document"
-                                      ? Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons.insert_drive_file,
-                                              size: 50,
-                                              color: Colors.white70,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
+                                  : widget.type == "photo"
+                                      ? InkWell(
+                                          onTap: () {
+                                            Get.toNamed(Routes.SHOW_IMAGE,
+                                                arguments: {
+                                                  "img": widget.text,
+                                                });
+                                          },
+                                          child: Image.network(
+                                            widget.text,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    const Icon(Icons.error),
+                                          ),
+                                        )
+                                      : widget.type == "document"
+                                          ? Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.insert_drive_file,
+                                                  size: 50,
+                                                  color: Colors.white70,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  widget.text,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            )
+                                          : Text(
                                               widget.text,
                                               style: const TextStyle(
                                                 color: Colors.white,
-                                                fontSize: 12,
+                                                fontSize: 14,
                                               ),
                                               textAlign: TextAlign.center,
                                             ),
-                                          ],
-                                        )
-                                      : Text(
-                                          widget.text,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
                         ),
                       ),
                     ),

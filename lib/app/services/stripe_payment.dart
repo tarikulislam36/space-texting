@@ -45,11 +45,12 @@ class StripePaymentService {
     );
 
     await Stripe.instance.presentPaymentSheet();
-    print('Payment Successful');
+    final oneMonthFromNow =
+        DateTime.now().add(const Duration(days: 30)); // Add 30 days
     FirebaseFirestore.instance
         .collection("users")
         .doc(FirebaseAuth.instance.currentUser!.uid)
-        .update({"membership": DateTime.now()});
+        .update({"membership": Timestamp.fromDate(oneMonthFromNow)});
 
     Get.snackbar("Success", "Membership Activated");
   }

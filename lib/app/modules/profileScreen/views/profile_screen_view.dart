@@ -119,10 +119,10 @@ class ProfileScreenView extends GetView<ProfileScreenController> {
                       _showConfirmationDialog(
                         context,
                         'Membership',
-                        'Membership will cost you \$14/2 months',
+                        'Membership will cost you \$6.99/months',
                         () async {
                           print("click");
-                          StripePaymentService().processPayment("10", "USD");
+                          StripePaymentService().processPayment("6.99", "USD");
                         },
                       );
                     }),
