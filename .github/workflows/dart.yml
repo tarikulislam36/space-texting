@@ -16,28 +16,36 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Flutter
+      # Step 2: Fix Invalid Dart Package Name (if necessary)
+      - name: Fix Package Name
+        run: |
+          if grep -q '^name: space-texting$' pubspec.yaml; then
+            sed -i '' 's/^name: space-texting$/name: space_texting/' pubspec.yaml
+            echo "Fixed invalid Dart package name in pubspec.yaml."
+          fi
+
+      # Step 3: Set up Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.2'
 
-      # Step 3: Install Ruby
+      # Step 4: Install Ruby
       - name: Install Ruby
         run: |
           brew install ruby
           echo 'export PATH="/usr/local/opt/ruby/bin:$PATH"' >> ~/.bash_profile
           source ~/.bash_profile
 
-      # Step 4: Install CocoaPods
+      # Step 5: Install CocoaPods
       - name: Install CocoaPods
         run: sudo gem install cocoapods
 
-      # Step 5: Install Flutter Dependencies
+      # Step 6: Install Flutter Dependencies
       - name: Install Flutter Dependencies
         run: flutter pub get
 
-      # Step 6: Initialize iOS Platform (Regenerate Podfile)
+      # Step 7: Initialize iOS Platform (Regenerate Podfile)
       - name: Ensure iOS Directory and Podfile
         run: |
           flutter clean
@@ -46,20 +54,20 @@ jobs:
           rm -rf Podfile.lock Pods
           pod init
 
-      # Step 7: Add Platform and Dependencies to Podfile
+      # Step 8: Add Platform and Dependencies to Podfile
       - name: Configure Podfile
         run: |
           echo "platform :ios, '12.0'" > ios/Podfile
           echo "workspace 'Runner.xcworkspace'" >> ios/Podfile
           echo "use_frameworks!" >> ios/Podfile
 
-      # Step 8: Install Pods
+      # Step 9: Install Pods
       - name: Install Pods
         run: |
           cd ios
           pod install
 
-      # Step 9: Build iOS
+      # Step 10: Build iOS
       - name: Build iOS
         run: flutter build ios --release --no-codesign
 
