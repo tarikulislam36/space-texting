@@ -1,29 +1,38 @@
 workflows:
-  ios:
-    name: iOS Workflow
-    max_build_duration: 60
-    platform: ios
-    description: Build an iOS application
-    flutter: stable
+  ios_build:
+    name: iOS Build Workflow
     environment:
+      flutter: stable # Specify the Flutter version channel
+      xcode: latest # Use the latest version of Xcode
       vars:
-        FLUTTER_PROJECT_PATH: .
+        FLUTTER_PROJECT_PATH: . # Path to the Flutter project
     scripts:
-      - name: Modify Podfile and install Pods
+      - name: Clean and prepare the environment
         script: |
-          # Set the correct iOS deployment target in the Podfile
-          sed -i '' 's/10.0/13.0/' ios/Podfile
+          echo "Cleaning build artifacts..."
+          flutter clean
+          echo "Ensuring proper Flutter dependencies..."
+          flutter pub get
 
-          # Remove existing Pods and Podfile.lock
+      - name: Update Podfile and clean Pods
+        script: |
+          echo "Updating iOS Deployment Target in Podfile to 13.0..."
+          sed -i '' 's/10.0/13.0/' ios/Podfile || echo "No iOS deployment target found to update."
+
+          echo "Cleaning old CocoaPods dependencies..."
           rm -rf ios/Pods ios/Podfile.lock ios/Runner.xcworkspace
 
-          # Install dependencies and Pods
-          cd ios
-          pod install --repo-update
+          echo "Installing updated Pods..."
+          cd ios && pod install --repo-update
 
       - name: Build iOS app
         script: |
+          echo "Building Flutter iOS app in release mode..."
           flutter build ios --release
 
     artifacts:
-      - build/ios/iphoneos/Runner.app
+      - build/ios/iphoneos/Runner.app # Collect the app artifact
+    publishing:
+      email:
+        recipients:
+          - tarikulislam4145@gmail.com # Email address to receive the build result
