@@ -53,12 +53,18 @@ jobs:
           cd ios
           rm -rf Podfile Podfile.lock Pods
           pod init
-          echo "platform :ios, '12.0'" > Podfile
+          echo "platform :ios, '13.0'" > Podfile  # Change platform to 13.0
           echo "workspace 'Runner.xcworkspace'" >> Podfile
           echo "use_frameworks!" >> Podfile
           pod install
 
-      # Step 8: Build iOS
+      # Step 8: Install Pods
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install --repo-update
+
+      # Step 9: Build iOS
       - name: Build iOS
         run: flutter build ios --release --no-codesign
 
