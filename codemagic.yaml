@@ -5,8 +5,6 @@ workflows:
     environment:
       vars:
         FLUTTER_VERSION: stable
-      ios:
-        cocoapods: default
       ruby: 3.0.4
     scripts:
       - name: Install Flutter
