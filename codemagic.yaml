@@ -3,19 +3,16 @@ workflows:
     name: iOS Build Workflow
     environment:
       vars:
-        # Add your required environment variables here
         FLUTTER_BUILD_MODE: "release"
         FLUTTER_BUILD_NAME: "1.0.0"
         FLUTTER_BUILD_NUMBER: "1"
       node: latest
       xcode: latest
     scripts:
-      # Set up the environment
       - name: Set up Flutter
         script: |
           flutter --version
           flutter pub get
-      # Update Podfile and Install Pods
       - name: Update Podfile and Install Pods
         script: |
           cd ios
@@ -29,17 +26,16 @@ workflows:
             \  end' Podfile
           else
             echo "Adding post_install logic"
-            echo 'post_install do |installer|' >> Podfile
-            echo '  installer.pods_project.targets.each do |target|' >> Podfile
-            echo '    target.build_configurations.each do |config|' >> Podfile
-            echo '      config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "13.0"' >> Podfile
-            echo '    end' >> Podfile
-            echo '  end' >> Podfile
-            echo 'end' >> Podfile
+            echo -e '\npost_install do |installer|' >> Podfile
+            echo -e '  installer.pods_project.targets.each do |target|' >> Podfile
+            echo -e '    target.build_configurations.each do |config|' >> Podfile
+            echo -e '      config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "13.0"' >> Podfile
+            echo -e '    end' >> Podfile
+            echo -e '  end' >> Podfile
+            echo -e 'end' >> Podfile
           fi
           pod repo update
           pod install
-      # Build the iOS app
       - name: Build iOS App
         script: |
           flutter build ios --release --no-codesign
