@@ -4,19 +4,41 @@ workflows:
     environment:
       xcode: latest
       cocoapods: latest
+      flutter: stable
     scripts:
-      - name: Set CocoaPods Deployment Target
+      - name: Set Deployment Target in Podfile
         script: |
           echo "Setting deployment target to iOS 13..."
-          sed -i '' '1i\
-          platform :ios, "13.0"
-          ' Podfile
-      - name: Install CocoaPods dependencies
+          if [ -f "ios/Podfile" ]; then
+            sed -i '' '1i\
+            platform :ios, "13.0"
+            ' ios/Podfile
+          else
+            echo "Podfile not found. Ensure your iOS directory exists and has a Podfile."
+            exit 1
+          fi
+      - name: Clean CocoaPods Cache
+        script: |
+          echo "Cleaning CocoaPods cache..."
+          rm -rf ios/Pods ios/Podfile.lock
+      - name: Install CocoaPods Dependencies
         script: |
           echo "Installing CocoaPods dependencies..."
-          rm -rf Pods Podfile.lock
+          cd ios
           pod install --repo-update
-      - name: Build with Xcode
-        script: xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release -sdk iphoneos -archivePath $PWD/build/Runner.xcarchive clean archive
+          cd ..
+      - name: Set iOS Deployment Target in Xcode Project
+        script: |
+          echo "Setting iOS deployment target to 13.0 in Xcode project..."
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/g' ios/Runner.xcodeproj/project.pbxproj
+      - name: Build iOS App
+        script: |
+          echo "Building iOS app..."
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/Runner.xcarchive \
+            clean archive
     artifacts:
       - build/Runner.xcarchive
