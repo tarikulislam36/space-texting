@@ -1,0 +1,41 @@
+workflows:
+  ios-build:
+    name: iOS Build
+    max_build_duration: 60
+    environment:
+      vars:
+        FLUTTER_VERSION: stable
+      ios:
+        cocoapods: default
+      ruby: 3.0.4
+    scripts:
+      - name: Install Flutter
+        script: |
+          git clone https://github.com/flutter/flutter.git -b $FLUTTER_VERSION
+          export PATH="$PATH:`pwd`/flutter/bin"
+          flutter --version
+      - name: Fetch Dependencies
+        script: |
+          flutter clean
+          flutter pub get
+      - name: Update Podfile and Install Pods
+        script: |
+          cd ios
+          # Ensure the Podfile is set to iOS 13.0
+          sed -i '' 's/platform :ios, .*/platform :ios, "13.0"/g' Podfile
+
+          # Add a post-install hook to set deployment target for all pods
+          echo "post_install do |installer|" >> Podfile
+          echo "  installer.pods_project.targets.each do |target|" >> Podfile
+          echo "    target.build_configurations.each do |config|" >> Podfile
+          echo "      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'" >> Podfile
+          echo "    end" >> Podfile
+          echo "  end" >> Podfile
+          echo "end" >> Podfile
+
+          pod repo update
+          pod install
+      - name: Build iOS App
+        script: flutter build ios --release
+    artifacts:
+      - build/ios/iphoneos/Runner.app
