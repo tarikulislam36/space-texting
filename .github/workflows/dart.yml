@@ -1,44 +1,63 @@
-name: iOS-ipa-build
+name: iOS Build and Fix Issues
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main  # Trigger on push to main branch
+  pull_request:
+    branches:
+      - main  # Trigger on PRs to main branch
 
 jobs:
   build-ios:
-    name: 🎉 iOS Build
+    name: Build iOS App
     runs-on: macos-latest
+
     steps:
-      - uses: actions/checkout@v3
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - uses: subosito/flutter-action@v2
+      # Step 2: Install Flutter SDK
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
-          architecture: x64
-      - run: flutter pub get
-      
-      - run: pod repo update
-        working-directory: ios
+          flutter-version: 'stable'  # Specify Flutter version
 
-      - run: pod install
-        working-directory: ios
-
-      - run: flutter build ios --release --no-codesign
-
-      - run: mkdir Payload
-        working-directory: build/ios/iphoneos
-
-      - run: mv Runner.app/ Payload
-        working-directory: build/ios/iphoneos
-
-      - name: Zip output
-        run: zip -qq -r -9 FlutterIpaExport.ipa Payload
-        working-directory: build/ios/iphoneos
-
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+      # Step 3: Install Ruby for CocoaPods
+      - name: Set up Ruby for CocoaPods
+        uses: ruby/setup-ruby@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/ios/iphoneos/FlutterIpaExport.ipa
-          tag: v1.0
-          overwrite: true
-          body: "This is first release"
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      # Step 4: Install CocoaPods and Update Repos
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods
+          pod repo update
+
+      # Step 5: Fetch Flutter Dependencies
+      - name: Fetch Flutter Dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
+      # Step 6: Modify Podfile and Install Pods
+      - name: Set Platform to iOS 13 and Install Pods
+        run: |
+          cd ios
+          sed -i '' 's/platform :ios, .*/platform :ios, "13.0"/g' Podfile  # Set platform to iOS 13.0
+          pod install
+        shell: bash
+
+      # Step 7: Build iOS App
+      - name: Build iOS App
+        run: flutter build ios --release
+
+      # Step 8: Upload Build Artifacts (Optional)
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-release-build
+          path: build/ios/iphoneos/Runner.app
