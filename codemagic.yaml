@@ -2,37 +2,41 @@ workflows:
   ios_build:
     name: iOS Build Workflow
     environment:
-      flutter: stable # Specify the Flutter version channel
-      xcode: latest # Use the latest version of Xcode
+      flutter: stable # Specify Flutter stable version
+      xcode: latest # Use the latest Xcode version
       vars:
-        FLUTTER_PROJECT_PATH: . # Path to the Flutter project
+        FLUTTER_PROJECT_PATH: . # Path to your Flutter project
     scripts:
       - name: Clean and prepare the environment
         script: |
-          echo "Cleaning build artifacts..."
+          echo "Cleaning Flutter build artifacts..."
           flutter clean
-          echo "Ensuring proper Flutter dependencies..."
+          echo "Fetching Flutter dependencies..."
           flutter pub get
 
-      - name: Update Podfile and clean Pods
+      - name: Set consistent iOS deployment target
         script: |
-          echo "Updating iOS Deployment Target in Podfile to 13.0..."
-          sed -i '' 's/10.0/13.0/' ios/Podfile || echo "No iOS deployment target found to update."
+          echo "Setting iOS Deployment Target to 13.0 in Podfile..."
+          sed -i '' "s/'10.0'/'13.0'/g" ios/Podfile || echo "No deployment target to update in Podfile."
 
-          echo "Cleaning old CocoaPods dependencies..."
+          echo "Updating deployment target in project.pbxproj..."
+          find ios/ -name project.pbxproj -print0 | xargs -0 sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = 10.0;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/g"
+
+      - name: Install CocoaPods dependencies
+        script: |
+          echo "Cleaning old CocoaPods..."
           rm -rf ios/Pods ios/Podfile.lock ios/Runner.xcworkspace
-
-          echo "Installing updated Pods..."
+          echo "Installing CocoaPods..."
           cd ios && pod install --repo-update
 
       - name: Build iOS app
         script: |
-          echo "Building Flutter iOS app in release mode..."
+          echo "Building Flutter iOS app..."
           flutter build ios --release
 
     artifacts:
-      - build/ios/iphoneos/Runner.app # Collect the app artifact
+      - build/ios/iphoneos/Runner.app
     publishing:
       email:
         recipients:
-          - tarikulislam4145@gmail.com # Email address to receive the build result
+          - tarikulislam4145@gmail.com
