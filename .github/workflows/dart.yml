@@ -22,9 +22,12 @@ jobs:
         with:
           flutter-version: '3.22.2' # Ensures Dart SDK >=3.3.4
 
-      # Step 3: Install Ruby (Optional if CocoaPods is pre-installed)
+      # Step 3: Install Ruby
       - name: Install Ruby
-        run: brew upgrade ruby
+        run: |
+          brew install ruby
+          echo 'export PATH="/usr/local/opt/ruby/bin:$PATH"' >> ~/.bash_profile
+          source ~/.bash_profile
 
       # Step 4: Install CocoaPods
       - name: Install CocoaPods
@@ -34,8 +37,8 @@ jobs:
       - name: Install Flutter Dependencies
         run: flutter pub get
 
-      # Step 6: Set iOS Deployment Target (Ensures Compatibility)
-      - name: Set iOS Deployment Target
+      # Step 6: Set iOS Deployment Target and Install Pods
+      - name: Set iOS Deployment Target and Install Pods
         run: |
           echo "platform :ios, '12.0'" > ios/Podfile
           cd ios
