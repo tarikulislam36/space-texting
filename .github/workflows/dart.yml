@@ -20,7 +20,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.13.0' # Ensures Dart 3.3.4 is included
+          flutter-version: '3.22.2' # Ensures Dart SDK >=3.3.4
 
       # Step 3: Install CocoaPods
       - name: Install CocoaPods
@@ -32,13 +32,8 @@ jobs:
 
       # Step 5: Build iOS
       - name: Build iOS
-        env:
-          FLUTTER_ROOT: /Users/runner/hostedtoolcache/flutter/3.13.0-stable/x64
         run: flutter build ios --release --no-codesign
 
-      # Optional Step: Upload Build Artifact
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ios-release
-          path: build/ios/ipa/*.ipa
+      # Optional: Verify Dart Version
+      - name: Check Dart Version
+        run: dart --version
