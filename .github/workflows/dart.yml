@@ -1,33 +1,44 @@
-name: Build iOS App
+name: Build iOS
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   build-ios:
     runs-on: macos-latest
     steps:
+      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # Step 2: Set up Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.13.0' # Replace with the desired version 
+          flutter-version: '3.13.0' # Ensures Dart 3.3.4 is included
 
-      - name: Debug Environment
-        run: |
-          uname -m
-          flutter doctor -v
-
+      # Step 3: Install CocoaPods
       - name: Install CocoaPods
         run: sudo gem install cocoapods
 
+      # Step 4: Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build iOS Release
-        run: flutter build ios --release
+      # Step 5: Build iOS
+      - name: Build iOS
+        env:
+          FLUTTER_ROOT: /Users/runner/hostedtoolcache/flutter/3.13.0-stable/x64
+        run: flutter build ios --release --no-codesign
+
+      # Optional Step: Upload Build Artifact
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-release
+          path: build/ios/ipa/*.ipa
