@@ -1,62 +1,42 @@
-name: Build iOS
+name: iOS-ipa-build
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build-ios:
+    name: 🎉 iOS Build
     runs-on: macos-latest
-
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      # Step 2: Set up Flutter
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.2'
+          channel: 'stable'
+          architecture: x64
+      - run: flutter pub get
+      
 
-      # Step 3: Install Ruby (required for CocoaPods)
-      - name: Install Ruby
-        run: |
-          brew install ruby
-          echo 'export PATH="/usr/local/opt/ruby/bin:$PATH"' >> ~/.bash_profile
-          source ~/.bash_profile
+      - run: pod repo update
+        working-directory: ios
 
-      # Step 4: Install CocoaPods (ensure we use the latest version)
-      - name: Install CocoaPods
-        run: sudo gem install cocoapods
+      - run: flutter build ios --release --no-codesign
 
-      # Step 5: Clean Flutter Project and Install Dependencies
-      - name: Clean Flutter Project and Install Dependencies
-        run: |
-          flutter clean
-          flutter pub get
+      - run: mkdir Payload
+        working-directory: build/ios/iphoneos
 
-      # Step 6: Ensure Podfile is Correct (Configure Firebase & Firestore)
-      - name: Update Podfile for Firebase
-        run: |
-          echo "platform :ios, '13.0'" > ios/Podfile
-          echo "use_frameworks!" >> ios/Podfile
-          echo "pod 'Firebase/Core', '~> 10.0'" >> ios/Podfile
-          echo "pod 'Firebase/Firestore', '~> 10.0'" >> ios/Podfile
-          echo "pod 'cloud_firestore', '~> 5.4.0'" >> ios/Podfile
-          flutter clean
+      - run: mv Runner.app/ Payload
+        working-directory: build/ios/iphoneos
 
-      # Step 7: Clear CocoaPods Cache and Install Pods (including repo update)
-      - name: Clear CocoaPods Cache and Install Pods
-        run: |
-          cd ios
-          pod cache clean --all
-          pod install --repo-update
+      - name: Zip output
+        run: zip -qq -r -9 FlutterIpaExport.ipa Payload
+        working-directory: build/ios/iphoneos
 
-      # Step 8: Build iOS App (Release)
-      - name: Build iOS App (Release)
-        run: flutter build ios --release --no-codesign
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/ios/iphoneos/FlutterIpaExport.ipa
+          tag: v1.0
+          overwrite: true
+          body: "This is first release"
