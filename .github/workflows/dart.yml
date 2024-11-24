@@ -45,29 +45,20 @@ jobs:
       - name: Install Flutter Dependencies
         run: flutter pub get
 
-      # Step 7: Initialize iOS Platform (Regenerate Podfile)
-      - name: Ensure iOS Directory and Podfile
+      # Step 7: Clean and Recreate iOS Podfile
+      - name: Recreate Podfile
         run: |
           flutter clean
           flutter create .
           cd ios
-          rm -rf Podfile.lock Pods
+          rm -rf Podfile Podfile.lock Pods
           pod init
-
-      # Step 8: Add Platform and Dependencies to Podfile
-      - name: Configure Podfile
-        run: |
-          echo "platform :ios, '12.0'" > ios/Podfile
-          echo "workspace 'Runner.xcworkspace'" >> ios/Podfile
-          echo "use_frameworks!" >> ios/Podfile
-
-      # Step 9: Install Pods
-      - name: Install Pods
-        run: |
-          cd ios
+          echo "platform :ios, '12.0'" > Podfile
+          echo "workspace 'Runner.xcworkspace'" >> Podfile
+          echo "use_frameworks!" >> Podfile
           pod install
 
-      # Step 10: Build iOS
+      # Step 8: Build iOS
       - name: Build iOS
         run: flutter build ios --release --no-codesign
 
