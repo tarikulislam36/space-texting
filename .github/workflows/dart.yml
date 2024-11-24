@@ -34,39 +34,28 @@ jobs:
       - name: Install CocoaPods
         run: sudo gem install cocoapods
 
-      # Step 5: Install Flutter Dependencies
-      - name: Install Flutter Dependencies
-        run: flutter pub get
-
-      # Step 6: Clean project and regenerate iOS files
-      - name: Clean Flutter Project and Regenerate iOS Files
+      # Step 5: Clean Flutter Project and Install Dependencies
+      - name: Clean Flutter Project and Install Dependencies
         run: |
           flutter clean
-          flutter create .
-          cd ios
-          rm -rf Podfile.lock Pods
-          pod init
+          flutter pub get
 
-      # Step 7: Update and Configure Podfile
-      - name: Update and Configure Podfile
+      # Step 6: Ensure Podfile is Correct (Configure Firebase & Firestore)
+      - name: Update Podfile for Firebase
         run: |
           echo "platform :ios, '13.0'" > ios/Podfile
-          echo "workspace 'Runner.xcworkspace'" >> ios/Podfile
           echo "use_frameworks!" >> ios/Podfile
           echo "pod 'Firebase/Core', '~> 10.0'" >> ios/Podfile
           echo "pod 'Firebase/Firestore', '~> 10.0'" >> ios/Podfile
           echo "pod 'cloud_firestore', '~> 4.0.0'" >> ios/Podfile
+          flutter clean
 
-      # Step 8: Install Pods with repo update
-      - name: Install Pods
+      # Step 7: Install CocoaPods Dependencies
+      - name: Install CocoaPods Dependencies
         run: |
           cd ios
           pod install --repo-update
 
-      # Step 9: Build iOS
-      - name: Build iOS
+      # Step 8: Build iOS App (Release)
+      - name: Build iOS App (Release)
         run: flutter build ios --release --no-codesign
-
-      # Optional: Check Dart Version
-      - name: Check Dart Version
-        run: dart --version
