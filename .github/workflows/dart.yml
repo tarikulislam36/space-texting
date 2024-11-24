@@ -23,14 +23,14 @@ jobs:
         with:
           flutter-version: '3.22.2'
 
-      # Step 3: Install Ruby
+      # Step 3: Install Ruby (required for CocoaPods)
       - name: Install Ruby
         run: |
           brew install ruby
           echo 'export PATH="/usr/local/opt/ruby/bin:$PATH"' >> ~/.bash_profile
           source ~/.bash_profile
 
-      # Step 4: Install CocoaPods
+      # Step 4: Install CocoaPods (ensure we use the latest version)
       - name: Install CocoaPods
         run: sudo gem install cocoapods
 
@@ -47,13 +47,14 @@ jobs:
           echo "use_frameworks!" >> ios/Podfile
           echo "pod 'Firebase/Core', '~> 10.0'" >> ios/Podfile
           echo "pod 'Firebase/Firestore', '~> 10.0'" >> ios/Podfile
-          echo "pod 'cloud_firestore', '~> 4.0.0'" >> ios/Podfile
+          echo "pod 'cloud_firestore', '~> 5.4.0'" >> ios/Podfile
           flutter clean
 
-      # Step 7: Install CocoaPods Dependencies
-      - name: Install CocoaPods Dependencies
+      # Step 7: Clear CocoaPods Cache and Install Pods (including repo update)
+      - name: Clear CocoaPods Cache and Install Pods
         run: |
           cd ios
+          pod cache clean --all
           pod install --repo-update
 
       # Step 8: Build iOS App (Release)
